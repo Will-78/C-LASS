@@ -1,0 +1,27 @@
+body {
+  margin: 0;
+  padding: 0;
+  background-color: black;
+}
+
+.nav-bar {
+  height: 10vh;
+}
+
+.hero-section {
+    height: 80vh;
+    background-image: url("hero_background.png");
+    background-size: cover;
+    background-position: center;
+  }
+
+.description-section {
+  display: flex;
+  flex-direction: column;
+  height: 50vh;
+}
+
+.description-section h1 {
+  text-align: center;
+  font-size: 2rem;
+}
