@@ -7,13 +7,13 @@
         <link rel="stylesheet" href="style.css">
     </head>
     <body>
-    <section class="nav-bar">
-    </section>
-    <section class="hero-section">
-    </section>
-    <section class="description-section">
-        <h1>Learn More</h1>
-    </section>
+        <section class="hero">
+            <div class="container">
+                <h1>Learn More</h1>
+            </div>
+        </section>
+        <section class="section">
+        </section>
     <!--
         <h1>NAU CS486C Capstone</h1>
         <h1>C-LASS (Cybersecurity Learning with AI for Static Systems)</h1>
@@ -37,5 +37,14 @@
         <hr width="100%" size="2">
         <p><h1>Website Under Construction</h1></p>
     -->
+        <div id="footer"></div>
+        <script>
+            fetch('footer.html')
+            .then(response => response.text())
+            .then(html => {
+                document.getElementById('footer').innerHTML = html;
+            })
+            .catch(err => console.error('Failed to load footer:', err));
+        </script>
     </body>
 </html>
