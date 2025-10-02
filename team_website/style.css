@@ -49,7 +49,7 @@ html,body{
   -moz-osx-font-smoothing: grayscale;
 
   margin: 0;
-  padding: 0;
+  padding: 72px 0 0 0; /* top padding equal to nav height*/
 }
 
 /*  Background Classes
@@ -144,15 +144,25 @@ nav-logo is for the logo and name of the site in the top left
 nav-links is like a list of links and with the a tag edits to the links
 =============================
 */
-.site-nav{
-  position: sticky; top:0; z-index:50;
+
+/*nav bar now fixed to top*/
+.site-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 72px;
+  z-index: 1000;
   backdrop-filter: blur(10px);
   background: linear-gradient(180deg, rgba(255,255,255,.75), rgba(255,255,255,.55));
   border-bottom: 1px solid var(--line);
 }
 
-.site-nav .inner{
-  height:72px; display:flex; align-items:center; justify-content:space-between;
+.site-nav .inner {
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .nav-logo{
@@ -508,3 +518,4 @@ This is my attempt to make this fit on smaller screens
   .site-footer .cols{ grid-template-columns: 1fr; }
   .nav-toggle { display: flex; }
 }
+
