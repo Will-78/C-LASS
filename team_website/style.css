@@ -33,7 +33,7 @@
 
   --container: 1200px;
   --gutter: 24px;
-  --section-y: clamp(72px, 9vw, 140px);
+  --section-y: clamp(36px, 4.5vw, 70px);
 }
 
 /* general presets for all main elements */
@@ -41,9 +41,7 @@
 
 html,body{
   height:100%;
-  background:
-    radial-gradient(900px 600px at 20% -10%, rgba(77,103,127,.10), transparent 60%),
-    linear-gradient(180deg, #EDECE7, var(--paper));
+  background: var(--paper); /* Simple base background */
   color: var(--ink);
   font-family: var(--font-ui);
   line-height: var(--lh-body);
@@ -52,6 +50,26 @@ html,body{
 
   margin: 0;
   padding: 0;
+}
+
+/*  Background Classes
+=============================
+easier to manage the backgrounds without chopping up the html 
+*/
+.bg-radial-glow{
+  background: radial-gradient(900px 600px at 20% -10%, rgba(77,103,127,.10), transparent 60%);
+}
+
+.bg-linear-warm{
+  background: linear-gradient(180deg, #EDECE7, var(--paper));
+}
+
+.bg-navy-fade{
+  background: linear-gradient(180deg, rgba(8,48,84,.08), transparent);
+}
+
+.bg-slate-glow{
+  background: radial-gradient(800px 400px at 80% 20%, rgba(77,103,127,.08), transparent 70%);
 }
 
 img{ max-width:100%; height:auto; display:block; }
@@ -427,28 +445,9 @@ good size for displaying multiple items in a grid layout like resources or team 
 
 .tile:hover{ border-color: rgba(8,48,84,.35); transform: translateY(-2px); box-shadow: var(--shadow-hard); }
 
-/* Responsive 
-=============================
-This is my attempt to make this fit on smaller screens 
-*/
-@media (max-width: 1024px){
-  .stat-cards{ grid-template-columns: 1fr 1fr; }
-  .feature-grid .feature{ grid-column: span 6; }
-  .site-footer .brand{ grid-column: span 12; }
-  .site-footer .cols{ grid-column: span 12; grid-template-columns: repeat(2, 1fr); }
-}
-
-@media (max-width: 640px){
-  :root{ --gutter: 18px; }
-  .nav-links{ display:none; } /* collapse to hamburger if you add JS */
-  .stat-cards{ grid-template-columns: 1fr; }
-  .feature-grid{ grid-template-columns: repeat(6, 1fr); }
-  .feature-grid .feature{ grid-column: span 6; }
-  .site-footer .cols{ grid-template-columns: 1fr; }
-}
 
 /* =============================
-   Hamburger / mobile nav
+Hamburger / mobile nav
    ============================= */
 .nav-toggle {
   display: none;
@@ -489,13 +488,23 @@ This is my attempt to make this fit on smaller screens
   margin-top: 12px;
 }
 
-/* Responsive adjustments for mobile */
-@media (max-width: 640px) {
-  .nav-links {
-    display: none;
-  }
+/* Responsive 
+=============================
+This is my attempt to make this fit on smaller screens 
+*/
+@media (max-width: 1024px){
+  .stat-cards{ grid-template-columns: 1fr 1fr; }
+  .feature-grid .feature{ grid-column: span 6; }
+  .site-footer .brand{ grid-column: span 12; }
+  .site-footer .cols{ grid-column: span 12; grid-template-columns: repeat(2, 1fr); }
+}
 
-  .nav-toggle {
-    display: flex;
-  }
+@media (max-width: 640px){
+  :root{ --gutter: 18px; }
+  .nav-links{ display:none; }
+  .stat-cards{ grid-template-columns: 1fr; }
+  .feature-grid{ grid-template-columns: repeat(6, 1fr); }
+  .feature-grid .feature{ grid-column: span 6; }
+  .site-footer .cols{ grid-template-columns: 1fr; }
+  .nav-toggle { display: flex; }
 }

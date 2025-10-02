@@ -1,5 +1,3 @@
-// bootstrap.js
-
 // Load header
 fetch('header.html')
   .then(response => response.text())
@@ -20,7 +18,7 @@ fetch('header.html')
   .catch(err => console.error('Failed to load header:', err));
 
 
-// Load footer (keeping your teammate's code exactly as is)
+// Load footer
 fetch('footer.html')
   .then(response => response.text())
   .then(html => {
