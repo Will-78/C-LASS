@@ -446,3 +446,56 @@ This is my attempt to make this fit on smaller screens
   .feature-grid .feature{ grid-column: span 6; }
   .site-footer .cols{ grid-template-columns: 1fr; }
 }
+
+/* =============================
+   Hamburger / mobile nav
+   ============================= */
+.nav-toggle {
+  display: none;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 28px;
+  height: 22px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+}
+
+.nav-toggle span {
+  display: block;
+  height: 3px;
+  background: var(--brand-navy);
+  border-radius: 2px;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.nav-toggle.open span:nth-child(1) {
+  transform: rotate(45deg) translateY(8px);
+}
+
+.nav-toggle.open span:nth-child(2) {
+  opacity: 0;
+}
+
+.nav-toggle.open span:nth-child(3) {
+  transform: rotate(-45deg) translateY(-8px);
+}
+
+.nav-links.nav-links-open {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+/* Responsive adjustments for mobile */
+@media (max-width: 640px) {
+  .nav-links {
+    display: none;
+  }
+
+  .nav-toggle {
+    display: flex;
+  }
+}
