@@ -188,6 +188,7 @@ hero-actions is for buttons or links below the lead paragraph
 ============================= 
 */
 .hero{
+  margin-top: 72px;
   height: 80vh;
   padding-block: clamp(40px, 10vw, 80px);
   position: center;
