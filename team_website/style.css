@@ -173,7 +173,7 @@ nav-links is like a list of links and with the a tag edits to the links
 
 .nav-links{ display:flex; gap: clamp(14px, 2vw, 28px); }
 
-.nav-links a{ color: var(--ink-2); font-weight:600; }
+.nav-links a{ color: var(--ink-2); font-weight:600; font-size: large;}
 
 .nav-links a:hover{ color: var(--ink); }
 
@@ -189,7 +189,7 @@ hero-actions is for buttons or links below the lead paragraph
 */
 .hero{
   margin-top: 72px;
-  height: 80vh;
+  height: 85vh;
   padding-block: clamp(40px, 10vw, 80px);
   position: center;
   background-image: url("hero_background.png");
