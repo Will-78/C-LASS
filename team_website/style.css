@@ -259,7 +259,7 @@ subtitle is for the paragraph text below the title
 .section .title{
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: clamp(1.5rem, 3vw, 2.5rem);
+  font-size: clamp(2.5rem, 4vw, 3.5rem);
   letter-spacing:.01em;
   color: var(--brand-navy);
 }
