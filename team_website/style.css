@@ -173,7 +173,7 @@ nav-links is like a list of links and with the a tag edits to the links
 
 .nav-links{ display:flex; gap: clamp(14px, 2vw, 28px); }
 
-.nav-links a{ color: var(--ink-2); font-weight:600; font-size: large;}
+.nav-links a{ color: var(--ink-2); font-weight:600; }
 
 .nav-links a:hover{ color: var(--ink); }
 
@@ -188,8 +188,7 @@ hero-actions is for buttons or links below the lead paragraph
 ============================= 
 */
 .hero{
-  margin-top: 72px;
-  height: 85vh;
+  height: 80vh;
   padding-block: clamp(40px, 10vw, 80px);
   position: center;
   background-image: url("hero_background.png");
@@ -233,11 +232,12 @@ hero-actions is for buttons or links below the lead paragraph
 }
 
 .hero-actions .btn{
-  width: 225px;
-  font-size: 1.25rem;
-  text-align: center;
-  box-sizing: border-box;
+  width: 225px; 
+  font-size: 1.25rem; 
+  text-align: center; 
+  box-sizing: border-box; 
   display: inline-block;
+  color: #fff;
 }
 
 /* Section
@@ -259,7 +259,7 @@ subtitle is for the paragraph text below the title
 .section .title{
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: clamp(2.5rem, 4vw, 3.5rem);
+  font-size: clamp(1.5rem, 3vw, 2.5rem);
   letter-spacing:.01em;
   color: var(--brand-navy);
 }
@@ -443,7 +443,9 @@ good size for displaying multiple items in a grid layout like resources or team 
 */
 
 .list-tiles{
-  display:grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  display:grid; 
+  gap: 14px; 
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
 }
 
 .tile{
@@ -520,5 +522,73 @@ This is my attempt to make this fit on smaller screens
   .nav-toggle { display: flex; }
 }
 
+/*=============================
+This section outlines the teams page
+- section through hover adjusts the individual team information
+- img through role adjusts the font, text and images
+=============================*/
 
+.team-section {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
 
+.team-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); 
+  gap: 30px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.team-member {
+  background: linear-gradient(180deg, rgba(255,255,255,.86), rgba(255,255,255,.74));
+  padding: 20px;
+  border-radius: 10px;
+  align-items: center;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s ease;
+}
+
+.team-member:hover {
+  transform: translateY(-3px);
+  border-color: rgba(8,48,84,.35);
+  box-shadow: var(--shadow-hard);
+}
+
+.team-member img {
+  width: 100px; 
+  height: 100px;
+  object-fit: cover;
+  border-radius: 50%;
+  margin-bottom: 15px;
+}
+
+.team-member h3 {
+  font-family: var(--font-display); 
+  font-weight:700; 
+  margin:2px 0 6px; 
+  color: var(--brand-navy);
+
+  font-size: 20px;
+  margin: 10px 0;
+  font-weight: bold;
+}
+
+.team-member p {
+  font-size: 14px;
+  color: var(var(--brand-navy));
+  margin: 5px 0;
+}
+
+.team-member .email {
+  color: var(--brand-navy);
+  font-weight: 600;
+}
+
+.team-member .role {
+  font-style: italic;
+  color: var(--brand-navy);
+}
