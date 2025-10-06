@@ -173,7 +173,7 @@ nav-links is like a list of links and with the a tag edits to the links
 
 .nav-links{ display:flex; gap: clamp(14px, 2vw, 28px); }
 
-.nav-links a{ color: var(--ink-2); font-weight:600; }
+.nav-links a{ color: var(--ink-2); font-weight:600; font-size: large;}
 
 .nav-links a:hover{ color: var(--ink); }
 
@@ -188,10 +188,11 @@ hero-actions is for buttons or links below the lead paragraph
 ============================= 
 */
 .hero{
-  height: 80vh;
+  margin-top: 72px;
+  height: 85vh;
   padding-block: clamp(40px, 10vw, 80px);
   position: center;
-  background-image: url("hero_background.png");
+  background-image: url("images/hero_background.png");
   background-size: cover;
   background-position: center;
 
@@ -232,12 +233,11 @@ hero-actions is for buttons or links below the lead paragraph
 }
 
 .hero-actions .btn{
-  width: 225px; 
-  font-size: 1.25rem; 
-  text-align: center; 
-  box-sizing: border-box; 
+  width: 225px;
+  font-size: 1.25rem;
+  text-align: center;
+  box-sizing: border-box;
   display: inline-block;
-  color: #fff;
 }
 
 /* Section
@@ -259,7 +259,7 @@ subtitle is for the paragraph text below the title
 .section .title{
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: clamp(1.5rem, 3vw, 2.5rem);
+  font-size: clamp(2.5rem, 4vw, 3.5rem);
   letter-spacing:.01em;
   color: var(--brand-navy);
 }
@@ -443,9 +443,7 @@ good size for displaying multiple items in a grid layout like resources or team 
 */
 
 .list-tiles{
-  display:grid; 
-  gap: 14px; 
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  display:grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
 }
 
 .tile{
@@ -521,6 +519,8 @@ This is my attempt to make this fit on smaller screens
   .site-footer .cols{ grid-template-columns: 1fr; }
   .nav-toggle { display: flex; }
 }
+
+
 
 /*=============================
 This section outlines the teams page
