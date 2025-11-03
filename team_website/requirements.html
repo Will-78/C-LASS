@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <title>C-LASS · Requirements</title>
+
+        <link rel="stylesheet" href="style.css" />
+        <script src="bootstrap.js"></script>
+    </head>
+    <body>
+        <nav id="header"></nav>
+
+        <section id="about" class="section">
+            <div class="container">
+                <div class="section-head">
+                    <h2 class="title">High-level Requirements</h2>
+                </div>
+
+                <div class="pill-list">
+                    <div class="pill">
+                        <span class="dot"></span>
+                        <div>
+                            <h4>Web UI</h4>
+                            <p>Provide a web UI where students ask natural-language questions about static-analysis CTFs and receive grounded, consistent, instructional answers.</p>
+                        </div>
+                    </div>
+                    <div class="pill">
+                        <span class="dot"></span>
+                        <div>
+                            <h4>Retrieval-Augmented Generation</h4>
+                            <p>Implement Retrieval-Augmented Generation that combines an LLM with a curated corpus of static-analysis CTF write-ups, docs, and explanations.</p>
+                        </div>
+                    </div>
+                    <div class="pill">
+                        <span class="dot"></span>
+                        <div>
+                            <h4>Knowledge Graph</h4>
+                            <p>Maintain a knowledge graph of program-analysis concepts, relations, and example challenges</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pill-list" style="margin-top: 24px;">
+                    <div class="pill">
+                        <span class="dot"></span>
+                        <div>
+                            <h4>Context-aware Follow-ups</h4>
+                            <p>Support context-aware follow-ups within a session to clarify, drill down, or chain questions.</p>
+                        </div>
+                    </div>
+                    <div class="pill">
+                        <span class="dot"></span>
+                        <div>
+                            <h4>Canonical Explanations</h4>
+                            <p>Ensure canonical explanations (consistent across sessions) by templating responses and pulling definitions from the graph.</p>
+                        </div>
+                    </div>
+                    <div class="pill">
+                        <span class="dot"></span>
+                        <div>
+                            <h4>Interactive Knowledge Graph</h4>
+                            <p>Implementation of a method to interact with the Knowledge Graph to insert, update, and query nodes and relationships.                  </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="feature" style="margin-top: 32px;">
+                    <h3 class="feature-title">Development Process</h3>
+                    <div class="feature-media">
+                        <img src="images/requirements.png" alt="Development Process" style="width: 100%; height: auto;">
+                    </div>
+                </div>
+            </div>
+        </section>  
+
+        <div id="footer"></div>
+    </body>
+</html>

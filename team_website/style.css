@@ -1,0 +1,594 @@
+:root{
+  /* CColor palette */
+  --brand-navy: #083054;
+  --brand-slate:#4D677F;
+  --paper:      #DFDED9;
+
+  /* globals for backgrounds and text */
+  --bg-0: var(--paper); 
+  --bg-1: #F1F0EB;
+  --bg-2: #EAE9E4; 
+  --ink:  #0C2236;    
+  --ink-2:#324B63;    
+  --muted:#5A7086;    
+  --line: rgba(8,48,84,.18); 
+
+  /* states for feedback */
+  --success:#0A7A53;
+  --warning:#9D6B00;
+  --danger: #9F2B2B;
+
+  /* Effects on elements */
+  --radius: 14px;
+  --ring:   0 0 0 1px var(--line);
+  --shadow-soft: 0 6px 18px rgba(12,34,54,.08);
+  --shadow-hard: 0 10px 28px rgba(12,34,54,.12);
+
+  /* text and display */
+  --font-ui: system-ui, -apple-system, "Inter", Segoe UI, Roboto, Helvetica, Arial;
+  --font-display: "Space Grotesk", var(--font-ui);
+  --letter-wide: .18em;
+  --lh-tight: 1.12;
+  --lh-body: 1.65;
+
+  --container: 1200px;
+  --gutter: 24px;
+  --section-y: clamp(36px, 4.5vw, 70px);
+}
+
+/* general presets for all main elements */
+*,*::before,*::after{ box-sizing: border-box; }
+
+html,body{
+  height:100%;
+  background: var(--paper); /* Simple base background */
+  color: var(--ink);
+  font-family: var(--font-ui);
+  line-height: var(--lh-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  margin: 0;
+  /*padding: 72px 0 0 0;  we can edit this to add a little space between the top and the nav bar if needed*/
+}
+
+/*  Background Classes
+=============================
+easier to manage the backgrounds without chopping up the html 
+*/
+.bg-radial-glow{
+  background: radial-gradient(900px 600px at 20% -10%, rgba(77,103,127,.10), transparent 60%);
+}
+
+.bg-linear-warm{
+  background: linear-gradient(180deg, #EDECE7, var(--paper));
+}
+
+.bg-navy-fade{
+  background: linear-gradient(180deg, rgba(8,48,84,.08), transparent);
+}
+
+.bg-slate-glow{
+  background: radial-gradient(800px 400px at 80% 20%, rgba(77,103,127,.08), transparent 70%);
+}
+
+img{ max-width:100%; height:auto; display:block; }
+
+/* Please use containers to wrap page sections this will make sectioning so more easier to manage */
+.container{
+  width:min(100%, var(--container));
+  margin-inline:auto;
+  padding-inline: var(--gutter);
+}
+
+/* Overwrites the link tagging for looks*/
+a{ color: var(--brand-navy); text-decoration: none; }
+
+a:hover{ color: #06243F; text-decoration: underline; }
+
+/* Utilities 
+=============================
+upper-spaced is for section headings makes it look more distinct and capitalized if that wasn't obvious 
+muted is for secondary text and less important content because it is less visable
+kbd is for keyboard key representation which I think is good if we have to explain certain things with our project but prob not needed
+=============================
+*/
+.upper-spaced{ text-transform: uppercase; letter-spacing: var(--letter-wide); }
+
+.muted{ color: var(--ink-2); }
+
+.kbd{
+  display:inline-block; padding:.15rem .45rem; border-radius:8px;
+  background:#EDEBE6; border:1px solid var(--line); color:#1A3149;
+}
+
+/* Buttons 
+=============================
+Primary button and ghost button styles
+
+Primary is for main actions you want the user to take
+Ghost is for secondary actions that are less important ( ghost blends with the background more )
+=============================
+*/
+.btn{
+  --pad-x: 20px; --pad-y: 12px;
+  display:inline-flex; align-items:center; gap:.6rem;
+  padding: var(--pad-y) var(--pad-x);
+  border-radius: 999px;
+  font-weight: 700; letter-spacing:.02em;
+  border: 1px solid var(--brand-navy);
+  background: linear-gradient(180deg, #0D3A62, var(--brand-navy));
+  color:#fff;
+  box-shadow: var(--shadow-soft);
+  transition: transform .15s ease, box-shadow .2s ease, background .2s ease;
+}
+
+.btn:hover{ transform: translateY(-1px); box-shadow: var(--shadow-hard); }
+
+.btn .dot{ width:8px; height:8px; border-radius:50%; background:#fff; }
+
+.btn.is-ghost{
+  background: transparent; color: var(--brand-navy);
+  border-color: var(--line);
+}
+
+.btn.is-ghost:hover{
+  border-color: var(--brand-navy);
+  background: rgba(8,48,84,.06);
+}
+
+/* Navigation 
+=============================
+use inner within the container to keep it aligned with the rest of the page
+nav-logo is for the logo and name of the site in the top left
+nav-links is like a list of links and with the a tag edits to the links
+=============================
+*/
+
+/*nav bar now fixed to top*/
+.site-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 72px;
+  z-index: 1000;
+  backdrop-filter: blur(10px);
+  background: linear-gradient(180deg, rgba(255,255,255,.75), rgba(255,255,255,.55));
+  border-bottom: 1px solid var(--line);
+}
+
+.site-nav .inner {
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.nav-logo{
+  display:flex; align-items:center; gap:.6rem;
+  font-family: var(--font-display); font-weight:800; letter-spacing:.04em;
+  color: var(--brand-navy);
+}
+
+.nav-links{ display:flex; gap: clamp(14px, 2vw, 28px); }
+
+.nav-links a{ color: var(--ink-2); font-weight:600; font-size: large;}
+
+.nav-links a:hover{ color: var(--ink); }
+
+/* Hero
+=============================
+Hero tag is for the main part of page
+
+eyebrow is small text above main typically for categories or labels
+lead is for the main paragraph text below the heading
+hero-actions is for buttons or links below the lead paragraph
+
+============================= 
+*/
+.hero{
+  margin-top: 72px;
+  height: 85vh;
+  padding-block: clamp(40px, 10vw, 80px);
+  position: center;
+  background-image: url("images/hero_background.png");
+  background-size: cover;
+  background-position: center;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.hero .eyebrow{
+  font-family: var(--font-display);
+  color: var(--ink-2);
+  text-transform: uppercase;
+  letter-spacing: var(--letter-wide);
+  font-size: clamp(.68rem, .9vw, .85rem);
+}
+
+.hero h1{
+  margin:.4rem 0 1rem 0;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(2.2rem, 6vw, 4.4rem);
+  line-height: var(--lh-tight);
+  letter-spacing: .01em;
+  color: var(--brand-navy);
+}
+
+.hero .lead{
+  max-width: 72ch; color: var(--ink-2);
+  font-size: clamp(1rem, 1.2vw, 1.125rem);
+}
+
+.hero-actions{ 
+  display: flex; 
+  gap: 12px; 
+  flex-wrap :wrap; 
+  justify-content: center;
+  align-items: center;
+}
+
+.hero-actions .btn{
+  width: 225px;
+  font-size: 1.25rem;
+  text-align: center;
+  box-sizing: border-box;
+  display: inline-block;
+}
+
+/* Section
+=============================
+self explanatory use this class like the tag for sections not hero
+
+section-head is for the heading part of the section
+title is for the main heading of the section
+subtitle is for the paragraph text below the title
+=============================
+*/
+.section{ padding-block: var(--section-y); }
+
+.section .section-head{
+  display:flex; align-items:end; justify-content:space-between; gap:24px;
+  margin-bottom: clamp(28px, 4vw, 48px);
+}
+
+.section .title{
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(2.5rem, 4vw, 3.5rem);
+  letter-spacing:.01em;
+  color: var(--brand-navy);
+}
+
+.section .subtitle{
+  color: var(--ink-2);
+  max-width: 70ch;
+}
+
+/* Cards
+=============================
+Also self explanatory use this class to make flash card esque elements
+
+card-body is for the inner padding of the card
+card-title is for the main heading of the card
+card-text is for the paragraph text below the title
+=============================
+*/
+.card{
+  background: linear-gradient(180deg, rgba(255,255,255,.88), rgba(255,255,255,.76));
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-soft);
+  overflow:hidden;
+}
+
+.card .card-body{ padding: 22px; }
+
+.card .card-title{
+  font-family: var(--font-display);
+  font-weight:700; letter-spacing:.01em; margin: 2px 0 6px;
+  color: var(--brand-navy);
+}
+
+.card .card-text{ color: var(--ink-2); }
+
+/* Stats
+=============================
+Second set of cards for displaying statistics we can remove if not needed
+
+stat-cards is for the grid container of the stats
+stat is for each individual stat card 
+eyebrow is for the small label text above the main value
+value is for the main number or value of the stat
+note is for the small text below the value for extra context
+=============================
+*/
+
+.stat-cards{
+  display:grid; gap: 18px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.stat{ padding:22px; }
+
+.stat .eyebrow{ color: var(--muted); text-transform:uppercase; letter-spacing:.16em; font-size:.72rem; }
+
+.stat .value{ font-family: var(--font-display); font-size: clamp(1.6rem, 3vw, 2.4rem); font-weight:800; color: var(--brand-navy); }
+
+.stat .note{ color: var(--ink-2); }
+
+/* Feature grid
+=============================
+Feature grid for displaying images and text in a grid layout like tabs?
+
+feature-grid is for the grid container
+feature is for each individual feature card
+media is for the image container
+copy is for the text container
+=============================
+*/
+.feature-grid{
+  display:grid; gap: 24px;
+  grid-template-columns: repeat(12, 1fr);
+}
+
+.feature-grid .feature{
+  grid-column: span 4;
+  background: linear-gradient(180deg, rgba(255,255,255,.86), rgba(255,255,255,.74));
+  border:1px solid var(--line);
+  border-radius: var(--radius);
+  overflow:hidden;
+  transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+  box-shadow: var(--shadow-soft);
+}
+
+.feature-grid .feature:hover{
+  transform: translateY(-3px);
+  border-color: rgba(8,48,84,.35);
+  box-shadow: var(--shadow-hard);
+}
+
+.feature .media img{ width:100%; aspect-ratio: 16/9; object-fit: cover; }
+
+.feature .copy{ padding: 20px; }
+
+.feature .copy h3{
+  font-family: var(--font-display); font-weight:700; margin:2px 0 6px; color: var(--brand-navy);
+}
+
+.feature .copy p{ color: var(--ink-2); }
+
+/* Pills
+=============================
+Think of these as smaller feature cards here for just variety 
+Look kind of like bulleted lists but cards
+=============================
+*/
+.pill-list{
+  display:grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.pill{
+  display:flex; gap:10px; align-items:flex-start;
+  padding:16px 18px; border-radius: 14px;
+  background: linear-gradient(180deg, rgba(255,255,255,.88), rgba(255,255,255,.74));
+  border:1px solid var(--line);
+}
+
+.pill .dot{ width:10px; height:10px; border-radius:50%; background: var(--brand-navy); }
+
+.pill h4{ margin:0; font-family: var(--font-display); color: var(--brand-navy); }
+
+.pill p{ margin:.25rem 0 0; color: var(--ink-2); }
+
+/* Call To Action band
+=============================
+If we want anything to standout to the viewer use this band to highlight it 
+*/
+.cta{
+  position:relative;
+  padding-block: clamp(56px, 8vw, 110px);
+  border-top:1px solid var(--line);
+  border-bottom:1px solid var(--line);
+  background: linear-gradient(180deg, rgba(8,48,84,.06), rgba(8,48,84,.03));
+}
+
+.cta h2{
+  margin:0 0 .6rem 0;
+  font-family: var(--font-display);
+  font-weight:800; letter-spacing:.01em;
+  font-size: clamp(1.6rem, 4vw, 3rem);
+  color: var(--brand-navy);
+}
+
+.cta p{ color: var(--ink-2); max-width: 65ch; }
+
+/* Footer
+=============================
+footer layouts
+=============================
+*/
+.site-footer{
+  padding-block: 48px;
+  border-top: 1px solid var(--line);
+  background: linear-gradient(180deg, #ECEBE6, #E5E4DF);
+}
+
+.site-footer .grid{
+  display:grid; gap: 24px;
+  grid-template-columns: repeat(12, 1fr);
+}
+
+.site-footer .brand{ grid-column: span 4; }
+
+.site-footer .cols{ grid-column: span 8; display:grid; gap:18px; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
+.site-footer h5{
+  margin:0 0 .5rem; font-family: var(--font-display); letter-spacing:.04em;
+  text-transform:uppercase; font-size:.8rem; color: var(--ink-2);
+}
+
+.site-footer a{ color: var(--ink-2); }
+
+.site-footer a:hover{ color: var(--brand-navy); }
+
+/* Tiles
+=============================
+good size for displaying multiple items in a grid layout like resources or team members
+=============================
+*/
+
+.list-tiles{
+  display:grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.tile{
+  padding: 14px 16px; border-radius: 12px;
+  background: linear-gradient(180deg, rgba(255,255,255,.88), rgba(255,255,255,.74));
+  border: 1px solid var(--line);
+  transition: border-color .2s ease, transform .2s ease, box-shadow .2s ease;
+  box-shadow: var(--shadow-soft);
+}
+
+.tile:hover{ border-color: rgba(8,48,84,.35); transform: translateY(-2px); box-shadow: var(--shadow-hard); }
+
+
+/* =============================
+Hamburger / mobile nav
+   ============================= */
+.nav-toggle {
+  display: none;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 28px;
+  height: 22px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+}
+
+.nav-toggle span {
+  display: block;
+  height: 3px;
+  background: var(--brand-navy);
+  border-radius: 2px;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.nav-toggle.open span:nth-child(1) {
+  transform: rotate(45deg) translateY(8px);
+}
+
+.nav-toggle.open span:nth-child(2) {
+  opacity: 0;
+}
+
+.nav-toggle.open span:nth-child(3) {
+  transform: rotate(-45deg) translateY(-8px);
+}
+
+.nav-links.nav-links-open {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+/* Responsive 
+=============================
+This is my attempt to make this fit on smaller screens 
+*/
+@media (max-width: 1024px){
+  .stat-cards{ grid-template-columns: 1fr 1fr; }
+  .feature-grid .feature{ grid-column: span 6; }
+  .site-footer .brand{ grid-column: span 12; }
+  .site-footer .cols{ grid-column: span 12; grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 640px){
+  :root{ --gutter: 18px; }
+  .nav-links{ display:none; }
+  .stat-cards{ grid-template-columns: 1fr; }
+  .feature-grid{ grid-template-columns: repeat(6, 1fr); }
+  .feature-grid .feature{ grid-column: span 6; }
+  .site-footer .cols{ grid-template-columns: 1fr; }
+  .nav-toggle { display: flex; }
+}
+
+
+
+/*=============================
+This section outlines the teams page
+- section through hover adjusts the individual team information
+- img through role adjusts the font, text and images
+=============================*/
+
+.team-section {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.team-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); 
+  gap: 30px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.team-member {
+  background: linear-gradient(180deg, rgba(255,255,255,.86), rgba(255,255,255,.74));
+  padding: 20px;
+  border-radius: 10px;
+  align-items: center;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s ease;
+}
+
+.team-member:hover {
+  transform: translateY(-3px);
+  border-color: rgba(8,48,84,.35);
+  box-shadow: var(--shadow-hard);
+}
+
+.team-member img {
+  width: 100px; 
+  height: 100px;
+  object-fit: cover;
+  border-radius: 50%;
+  margin-bottom: 15px;
+}
+
+.team-member h3 {
+  font-family: var(--font-display); 
+  font-weight:700; 
+  margin:2px 0 6px; 
+  color: var(--brand-navy);
+
+  font-size: 20px;
+  margin: 10px 0;
+  font-weight: bold;
+}
+
+.team-member p {
+  font-size: 14px;
+  color: var(var(--brand-navy));
+  margin: 5px 0;
+}
+
+.team-member .email {
+  color: var(--brand-navy);
+  font-weight: 600;
+}
+
+.team-member .role {
+  font-style: italic;
+  color: var(--brand-navy);
+}
