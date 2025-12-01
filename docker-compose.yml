@@ -24,7 +24,6 @@ services:
       - "3000:3000"
     depends_on:
       - backend
-    command: npm run dev
       
   backend:
     build:
@@ -37,8 +36,6 @@ services:
       - "8000:8000"
     volumes:
       - ./backend:/app
-      - /app/__pycache__/
-    command: uvicorn app.main:app --host 0.0.0.0 --reload
 
 volumes:
   caddy_data:
