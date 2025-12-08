@@ -1,33 +1,70 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import { useState, useEffect } from "react";
 
-export default function BackendTest() {
-  const [message, setMessage] = useState<string>('Loading...');
-  const [error, setError] = useState<string | null>(null);
+const Chat = () => {
+  const [userMessage, setUserMessage] = useState('');
+  const [fullChatLog, setFullChatLog] = useState([{role: "ai", content: "Hello!"}]);
 
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const res = await fetch('/api/test');
-        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-        const data = await res.json();
-        setMessage(data.message);
-      } catch (err: any) {
-        setError(err.message);
-      }
+  const inputPlaceholder = "Enter message...";
+
+  const fetchResponse = async() => {
+    try {
+      setFullChatLog(prevLog => [...prevLog, {role: "user", content: userMessage}]);
+
+      setUserMessage('');
+
+      const response = await fetch('/api/test', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          message: userMessage
+        })
+      });
+
+      const data = await response.json();
+
+      setFullChatLog(prevLog => [...prevLog, {role: "ai", content: data.message}]);
+      
+    } catch (error) {
+      console.error("Error fetching response.", error);
     }
-    fetchData();
-  }, []);
+  }
 
   return (
-    <div>
-      <h2>Backend Test</h2>
-      {error ? (
-        <p>{error}</p>
-      ) : (
-        <p>{message}</p>
-      )}
+    <div className="chat">
+      <div>
+        {fullChatLog.map((message, idx) => {
+          if (message.role === "user") {
+            return (
+              <div key={idx} className="user-message">
+                user: {message.content}
+              </div>
+            );
+          }
+          return (
+          <div key={idx} className="ai-message">
+            ai: {message.content}
+          </div>
+          );
+        })}
+      </div>
+
+      <div className="input-section">
+        <textarea
+          value={userMessage}
+          onChange={(e) => setUserMessage(e.target.value)}
+          placeholder={inputPlaceholder}
+          className="input-text-box"
+        />
+        <button type="submit" onClick={fetchResponse} disabled={!userMessage.trim()}>
+          Enter
+        </button>
+      </div>
     </div>
   );
 }
+
+export default Chat;

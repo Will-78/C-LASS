@@ -20,21 +20,35 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     container_name: frontend
+    working_dir: /app
     ports:
       - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+      - WATCHPACK_POLLING=true
+      - WATCHPACK_POLLING_INTERVAL=1000
     depends_on:
       - backend
+    command: npm run dev -- --webpack --hostname 0.0.0.0 --port 3000
       
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
     container_name: backend
+    working_dir: /app
+    env_file:
+      - .backend-env
     ports:
       - "8000:8000"
     volumes:
       - ./backend:/app
+    command: uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
 volumes:
   caddy_data:
   caddy_config:
+  frontend_node_modules:
