@@ -50,7 +50,7 @@ const Chat = () => {
               <div className="h-7 w-7 rounded-full bg-emerald-500/80" />
 
               <div>
-                <h1 className="text-sm font-semibold">C-LASS</h1>
+                <h1 className="text-sm font-semibold">KGTutor</h1>
                 <p className="text-xs text-slate-400">
                   Ask anything about SE450
                 </p>
@@ -90,7 +90,7 @@ const Chat = () => {
                 />
 
                 <div className="mt-2 flex items-center justify-between text-[11px] text-slate-500">
-                  <span>Model: C-LASS 1.0</span>
+                  <span>Model: KGTutor 1.0</span>
                   <button 
                   className="inline-flex items-center gap-1 rounded-full bg-emerald-500 px-3 py-1 text-xs font-medium text-black hover:bg-emerald-400"
                   onClick={fetchResponse}
@@ -103,7 +103,7 @@ const Chat = () => {
 
               </div>
               <p className="mt-2 text-[11px] text-slate-500">
-                C-LASS can make mistakes. Check with class materials
+                KGTutor can make mistakes. Check with class materials
               </p>
             </div>
           </footer>
