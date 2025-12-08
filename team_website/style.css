@@ -363,7 +363,7 @@ media video-wrapper is for the video container
 
 .feature .copy p{ color: var(--ink-2); }
 
-.feature .media video {
+.feature .media iframe {
   width: 100%;
   aspect-ratio: 16/9;
   object-fit: cover;
