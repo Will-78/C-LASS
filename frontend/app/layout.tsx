@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import UserIcon from "./components/UserIcon"; // added import for the user button
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,7 +28,22 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        {/* Header with top-right button */}
+        <header
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            padding: "12px 24px",
+            borderBottom: "1px solid #ccc",
+          }}
+        >
+          <h1>Chatbot App</h1>
+          <UserIcon />
+        </header>
+
+        {/* Main content */}
+        <main>{children}</main>
       </body>
     </html>
   );
