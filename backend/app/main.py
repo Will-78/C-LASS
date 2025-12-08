@@ -7,13 +7,14 @@ from neo4j_graphrag.llm import OpenAILLM
 from neo4j_graphrag.generation import GraphRAG, RagTemplate
 from neo4j_graphrag.message_history import InMemoryMessageHistory
 from neo4j_graphrag.types import LLMMessage
+import os
 
 class Message(BaseModel):
     message: str
 
 # Demo database credentials
-URI = "neo4j+s://demo.neo4jlabs.com"
-AUTH = ("recommendations", "recommendations")
+URI = os.environ["NEO4J_URI"]
+AUTH = (os.environ["NEO4J_AUTH_USER"], os.environ["NEO4J_AUTH_PASS"])
 # Connect to Neo4j database
 driver = GraphDatabase.driver(URI, auth=AUTH)
 
@@ -21,9 +22,8 @@ driver = GraphDatabase.driver(URI, auth=AUTH)
 embedder = OpenAIEmbeddings(model="text-embedding-ada-002")
 retriever = VectorRetriever(
     driver,
-    index_name="moviePlotsEmbedding",
-    embedder=embedder,
-    return_properties=["title", "plot"],
+    index_name="text_embeddings",
+    embedder=embedder
 )
 
 # LLM
