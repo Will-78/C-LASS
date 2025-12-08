@@ -329,6 +329,7 @@ feature-grid is for the grid container
 feature is for each individual feature card
 media is for the image container
 copy is for the text container
+media video-wrapper is for the video container
 =============================
 */
 .feature-grid{
@@ -361,6 +362,14 @@ copy is for the text container
 }
 
 .feature .copy p{ color: var(--ink-2); }
+
+.feature .media video {
+  width: 100%;
+  aspect-ratio: 16/9;
+  object-fit: cover;
+  display: block;
+  border: 0;
+}
 
 /* Pills
 =============================
