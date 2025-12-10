@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from neo4j import GraphDatabase
 from neo4j_graphrag.retrievers import VectorRetriever
@@ -32,7 +32,7 @@ llm = OpenAILLM(model_name="gpt-4o", model_params={"temperature": 0})
 
 # Create prompt template
 prompt_template = RagTemplate(
-    template='''
+    template=''' 
     You are a helpful tutor. Give hints to help guide the user to the answer to their question. 
     Do not outright give the answer. Do not make up answers.
 
@@ -59,6 +59,15 @@ history = InMemoryMessageHistory()
 message = LLMMessage(role="assistant", content="Hello!")
 history.add_message(message)
 
+# ------------------------------
+# User Management; user auth storage
+# ------------------------------
+users = []  # list of dicts: {"username": str, "password": str}
+
+class AuthRequest(BaseModel):
+    username: str
+    password: str
+
 app = FastAPI()
 
 @app.post("/test")
@@ -73,3 +82,19 @@ def api_test(request: Message) -> Message:
     history.add_message(message)
 
     return Message(message = response.answer)
+
+# Sign-up endpoint
+@app.post("/signup")
+def signup(auth_request: AuthRequest):
+    if any(u["username"] == auth_request.username for u in users):
+        raise HTTPException(status_code=400, detail="Username already exists")
+    users.append({"username": auth_request.username, "password": auth_request.password})
+    return {"message": "User signed up successfully"}
+
+# Sign-in endpoint
+@app.post("/signin")
+def signin(auth_request: AuthRequest):
+    for u in users:
+        if u["username"] == auth_request.username and u["password"] == auth_request.password:
+            return {"message": "Signed in successfully"}
+    raise HTTPException(status_code=401, detail="Invalid username or password")

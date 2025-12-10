@@ -29,15 +29,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         {/* Header with top-right button */}
-        <header
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            padding: "12px 24px",
-            borderBottom: "1px solid #ccc",
-          }}
-        >
+        <header className="flex justify-between items-center px-6 py-3 border-b border-gray-300">
           <h1>Chatbot App</h1>
           <UserIcon />
         </header>
