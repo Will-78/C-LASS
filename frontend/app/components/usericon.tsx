@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import SignInPopup from "./SignInPopup";
+import SignInPopup from "./signinpopup";
 
 export default function UserIcon() {
   const [showPopup, setShowPopup] = useState(false);
