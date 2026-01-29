@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import SignInPopup from "./SignInPopup";
+import SignInPopup from "./signinpopup";
 
 export default function UserIcon() {
   const [showPopup, setShowPopup] = useState(false);
