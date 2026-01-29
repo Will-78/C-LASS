@@ -1,22 +1,53 @@
 'use client';
-
+import { useState, useEffect } from 'react';
 import { InteractiveNvlWrapper } from '@neo4j-nvl/react';
 
-const nodes = [{ id: '1', title: 'Neo4j' }, { id: '2', title: 'Next.js' }];
-const rels = [{ id: '10', from: '1', to: '2', title: 'Works with' }];
+export default function GraphView() {
+  const [graphData, setGraphData] = useState({ nodes: [], rels: [] });
 
-const GraphView = () => {
+  useEffect(() => {
+    async function fetchData() {
+      const response = await fetch('/api/get-graph-info');
+      const data = await response.json();
+
+      const formattedNodes = data.nodes.map((n: any) => ({
+        id: n.id,
+        caption: 
+            n.labels.includes('Document') ? 'Document' :
+            n.labels.includes('Chunk') ? 'Chunk' :
+            n.properties.name,
+        size: 20,
+        color: 
+            n.labels.includes('Document') ? '#ffffff' :  
+            n.labels.includes('Chunk') ? '#f2b963' :
+            '#58abc4'
+      }));
+
+      const formattedRels = data.edges.map((e: any) => ({
+        id: e.id,
+        from: e.from,
+        to: e.to,
+        caption: e.type,
+      }));
+
+      setGraphData({ nodes: formattedNodes, rels: formattedRels });
+    }
+    fetchData();
+  }, []);
+
   return (
-    <div className="h-[500px] w-full border border-zinc-200">
-      <InteractiveNvlWrapper
-        nodes={nodes} 
-        rels={rels} 
-        mouseEventCallbacks={{
-          onNodeClick: (node) => console.log('Clicked:', node)
-        }}
+    <div className="h-screen w-full bg-zinc-950">
+      <InteractiveNvlWrapper 
+        nodes={graphData.nodes} 
+        rels={graphData.rels}
+        nvlOptions={{
+            layout: 'forceDirected',
+            initialZoom: 1.0,
+            minZoom: 0.05,
+            maxZoom: 5.0,
+            renderer: 'canvas'
+          }}
       />
     </div>
   );
 }
-
-export default GraphView;
