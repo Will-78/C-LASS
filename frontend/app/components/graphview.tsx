@@ -40,6 +40,17 @@ export default function GraphView() {
       <InteractiveNvlWrapper 
         nodes={graphData.nodes} 
         rels={graphData.rels}
+        mouseEventCallbacks={{
+          onDragStart: (node, event) => {
+            console.log(`Drag started on ${node[0].id}`);
+          },
+          onDrag: (node, event) => {
+            console.log(`Dragging node ${node[0].id}`);
+          },
+          onDragEnd: (node, event) => {
+            console.log(`Drag ended on node ${node[0].id}`);
+          }
+        }}
         nvlOptions={{
             layout: 'forceDirected',
             initialZoom: 1.0,
