@@ -49,7 +49,9 @@ export default function GraphView() {
           },
           onDragEnd: (node, event) => {
             console.log(`Drag ended on node ${node[0].id}`);
-          }
+          },
+          onPan: (panning, event) => {},
+          onZoom: (zoomLevel, event) => {}
         }}
         nvlOptions={{
             layout: 'forceDirected',
