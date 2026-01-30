@@ -9,6 +9,8 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@neo4j-nvl/base": "1.0.0",
+    "@neo4j-nvl/react": "^1.0.0",
     "@tailwindcss/cli": "^4.1.17",
     "next": "^16.0.8",
     "react": "19.2.0",
@@ -17,7 +19,7 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
-    "@types/react": "^19.2.7",
+    "@types/react": "^19.2.10",
     "@types/react-dom": "^19",
     "autoprefixer": "^10.4.22",
     "eslint": "^9",

@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import UserIcon from "./components/usericon"; // added import for the user button
+import UserIcon from "./components/usericon";
+import Link from "next/link";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,6 +32,12 @@ export default function RootLayout({
         {/* Header with top-right button */}
         <header className="flex justify-between items-center px-6 py-3 border-b border-gray-300">
           <h1>Chatbot App</h1>
+          <Link href="/" className="mr-4">
+            <button>Chat View</button>
+          </Link>
+          <Link href="/kg" className="mr-4">
+            <button>Graph View</button>
+          </Link>
           <UserIcon />
         </header>
 

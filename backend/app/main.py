@@ -12,6 +12,7 @@ from neo4j_graphrag.types import LLMMessage
 import os
 from sqlalchemy import create_engine, Column, Integer, String
 from sqlalchemy.orm import sessionmaker, declarative_base, Session
+from .graph_operations import get_full_graph
 
 # ------------------------------
 # Database initialization
@@ -105,8 +106,8 @@ class AuthRequest(BaseModel):
 # ------------------------------
 app = FastAPI()
 
-@app.post("/test")
-def api_test(request: Message) -> Message:
+@app.post("/generate_response")
+def generate_response(request: Message) -> Message:
     message = LLMMessage(role="user", content=request.message)
     history.add_message(message)
 
@@ -137,3 +138,7 @@ def signin(auth_request: AuthRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=401, detail="Invalid username or password")
 
     return {"message": "Signed in successfully"}
+
+@app.get("/get-graph-info")
+def get_graph_info():
+    return get_full_graph(driver)

@@ -21,7 +21,7 @@ const Chat = () => {
 
       setUserMessage('');
 
-      const response = await fetch('/api/test', {
+      const response = await fetch('/api/generate_response', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
