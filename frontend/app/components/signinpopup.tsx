@@ -6,15 +6,21 @@ type SignInPopupProps = {
   onClose: () => void;
   currentUser: string | null;
   setCurrentUser: (user: string | null) => void;
+  setUserRole: (role: string | null) => void;
 };
 
-export default function SignInPopup({ onClose, currentUser, setCurrentUser }: SignInPopupProps) {
+export default function SignInPopup({
+  onClose,
+  currentUser,
+  setCurrentUser,
+  setUserRole,
+}: SignInPopupProps) {
   const [step, setStep] = useState<"choose" | "signin" | "signupRole" | "signupForm">("choose");
   const [signupRole, setSignupRole] = useState<"Teacher" | "Student" | null>(null);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
-  // Backend fetch calls
+  // handle sign in
   const handleSignIn = async () => {
     try {
       const res = await fetch("/api/signin", {
@@ -23,8 +29,14 @@ export default function SignInPopup({ onClose, currentUser, setCurrentUser }: Si
         body: JSON.stringify({ username, password }),
       });
       const data = await res.json();
+
       if (res.ok) {
         setCurrentUser(username);
+        setUserRole(data.role || "Student");
+
+        localStorage.setItem("username", username);
+        localStorage.setItem("userRole", data.role || "Student");
+
         onClose();
         setUsername("");
         setPassword("");
@@ -36,16 +48,23 @@ export default function SignInPopup({ onClose, currentUser, setCurrentUser }: Si
     }
   };
 
+  // handle sign up
   const handleSignUp = async () => {
     try {
       const res = await fetch("/api/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ username, password, role: signupRole }),
       });
       const data = await res.json();
+
       if (res.ok) {
         setCurrentUser(username);
+        setUserRole(signupRole || "Student");
+
+        localStorage.setItem("username", username);
+        localStorage.setItem("userRole", signupRole || "Student");
+
         onClose();
         setUsername("");
         setPassword("");
@@ -106,13 +125,19 @@ export default function SignInPopup({ onClose, currentUser, setCurrentUser }: Si
     <>
       <h2 className="mb-5 font-bold text-green-500">Sign Up</h2>
       <button
-        onClick={() => { setSignupRole("Teacher"); setStep("signupForm"); }}
+        onClick={() => {
+          setSignupRole("Teacher");
+          setStep("signupForm");
+        }}
         className="w-full py-2 mb-3 rounded-lg border-2 border-green-500 bg-white font-bold text-green-500 hover:bg-green-100"
       >
         Teacher
       </button>
       <button
-        onClick={() => { setSignupRole("Student"); setStep("signupForm"); }}
+        onClick={() => {
+          setSignupRole("Student");
+          setStep("signupForm");
+        }}
         className="w-full py-2 mb-3 rounded-lg border-2 border-green-500 bg-white font-bold text-green-500 hover:bg-green-100"
       >
         Student
@@ -149,9 +174,17 @@ export default function SignInPopup({ onClose, currentUser, setCurrentUser }: Si
 
   const renderSignedInView = () => (
     <>
-      <h2 className="mb-5 font-bold text-green-500">Signed in as {currentUser}</h2>
+      <h2 className="mb-5 font-bold text-green-500">
+        Signed in as {currentUser}
+      </h2>
       <button
-        onClick={() => { setCurrentUser(null); onClose(); }}
+        onClick={() => {
+          localStorage.removeItem("username");
+          localStorage.removeItem("userRole");
+          setCurrentUser(null);
+          setUserRole(null);
+          onClose();
+        }}
         className="w-full py-2 mt-3 rounded-lg border-2 border-green-500 bg-white font-bold text-green-500 hover:bg-green-100"
       >
         Sign Out
@@ -162,12 +195,15 @@ export default function SignInPopup({ onClose, currentUser, setCurrentUser }: Si
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
       <div className="bg-white p-6 rounded-xl min-w-[300px] flex flex-col items-center">
-        {currentUser ? renderSignedInView() : (
-          step === "choose" ? renderChooseStep() :
-          step === "signin" ? renderSignInForm() :
-          step === "signupRole" ? renderSignupRole() :
-          renderSignupForm()
-        )}
+        {currentUser
+          ? renderSignedInView()
+          : step === "choose"
+          ? renderChooseStep()
+          : step === "signin"
+          ? renderSignInForm()
+          : step === "signupRole"
+          ? renderSignupRole()
+          : renderSignupForm()}
 
         <button
           onClick={onClose}

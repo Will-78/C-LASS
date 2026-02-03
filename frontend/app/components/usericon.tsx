@@ -2,15 +2,31 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import SignInPopup from "./signinpopup";
+import SignInPopup from "./SignInPopup";
 
-export default function UserIcon() {
+// props for UserIcon, current user info and functions to update user and role state
+type UserIconProps = {
+  currentUser: string | null;
+  setCurrentUser: (user: string | null) => void;
+  userRole: string | null;
+  setUserRole: (role: string | null) => void;
+};
+
+export default function UserIcon({
+  currentUser,
+  setCurrentUser,
+  userRole,
+  setUserRole,
+}: UserIconProps) {
   const [showPopup, setShowPopup] = useState(false);
-  const [username, setUsername] = useState<string | null>(null);
 
+  // Load from localStorage if not in state
   useEffect(() => {
-    const saved = localStorage.getItem("username");
-    if (saved) setUsername(saved);
+    const savedUser = localStorage.getItem("username");
+    const savedRole = localStorage.getItem("userRole");
+
+    if (!currentUser && savedUser) setCurrentUser(savedUser);
+    if (!userRole && savedRole) setUserRole(savedRole);
   }, []);
 
   return (
@@ -27,31 +43,34 @@ export default function UserIcon() {
         />
       </button>
 
+    {/* show pop up only if showPopUp is true (logical AND)*/}
       {showPopup && (
         <SignInPopup
           onClose={() => setShowPopup(false)}
-          currentUser={username}
-          setCurrentUser={(user) => {
-            setUsername(user);
-            if (user) {
-              localStorage.setItem("username", user);
-            } else {
-              localStorage.removeItem("username");
-            }
-          }}
+          currentUser={currentUser}
+          setCurrentUser={setCurrentUser}
+          setUserRole={setUserRole}
         />
       )}
 
-      {username && !showPopup && (
-        <div className="absolute top-10 right-0 bg-white p-3 rounded-lg border border-gray-300">
+    {/* show signed-in info only if there exists a current user and the popup is not open*/}
+      {currentUser && !showPopup && (
+        <div className="absolute top-10 right-0 bg-white p-3 rounded-lg border border-gray-300 w-48 z-50">
           <p>
-            Signed in as: <b>{username}</b>
+            Signed in as: <b>{currentUser}</b>
           </p>
+          <p className="text-sm text-gray-600">
+            Role: <b>{userRole || "Student"}</b>
+          </p>
+
           <button
-            className="mt-2 text-green-500 font-bold hover:underline"
+            className="mt-2 w-full py-1 bg-green-100 text-green-700 rounded font-bold hover:bg-green-200"
             onClick={() => {
+              // clear localStorage and state
               localStorage.removeItem("username");
-              setUsername(null);
+              localStorage.removeItem("userRole");
+              setCurrentUser(null);
+              setUserRole(null);
             }}
           >
             Sign Out
