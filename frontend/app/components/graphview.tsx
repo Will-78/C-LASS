@@ -1,9 +1,10 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { InteractiveNvlWrapper } from '@neo4j-nvl/react';
 
 export default function GraphView() {
   const [graphData, setGraphData] = useState({ nodes: [], rels: [] });
+  const [menuData, setMenuData] = useState(null); // menu for adding nodes
 
   useEffect(() => {
     async function fetchData() {
@@ -35,9 +36,34 @@ export default function GraphView() {
     fetchData();
   }, []);
 
+  const handleCanvasClick = useCallback((event) => {
+    setMenuData({
+      x: event.clientX,
+      y: event.clientY
+    });
+  }, []);
+
+  const createNewNode = () => {
+    if (!menuData) return;
+
+    const newNode = {
+      id: `node-${Date.now()}`,
+      caption: 'New Entity',
+      size: 20,
+      color: '#10b981'
+    };
+
+    setGraphData(prev => ({
+      ...prev,
+      nodes: [...prev.nodes, newNode]
+    }));
+    
+    setMenuData(null);
+  };
+
   return (
     <div className="h-screen w-full bg-zinc-950">
-      <InteractiveNvlWrapper 
+      <InteractiveNvlWrapper
         nodes={graphData.nodes} 
         rels={graphData.rels}
         mouseEventCallbacks={{
@@ -51,7 +77,8 @@ export default function GraphView() {
             console.log(`Drag ended on node ${node[0].id}`);
           },
           onPan: (panning, event) => {},
-          onZoom: (zoomLevel, event) => {}
+          onZoom: (zoomLevel, event) => {},
+          onCanvasClick: (event) => {handleCanvasClick(event)}
         }}
         nvlOptions={{
             layout: 'forceDirected',
@@ -61,6 +88,27 @@ export default function GraphView() {
             renderer: 'canvas'
           }}
       />
+
+      {menuData && (
+        <div 
+          className="fixed z-[9999] bg-white text-slate-900 rounded-lg shadow-2xl py-2 w-48 border border-slate-200"
+          style={{ 
+            top: `${menuData.y}px`, 
+            left: `${menuData.x}px` 
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="px-4 py-1 text-xs font-bold text-slate-400 uppercase tracking-wider">
+            Actions
+          </div>
+          <button 
+            onClick={createNewNode}
+            className="w-full text-left px-4 py-2 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center gap-2 font-medium"
+          >
+            <span>+</span> Add New Node
+          </button>
+        </div>
+      )}
     </div>
   );
 }
