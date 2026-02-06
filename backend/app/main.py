@@ -12,7 +12,7 @@ from neo4j_graphrag.types import LLMMessage
 import os
 from sqlalchemy import create_engine, Column, Integer, String
 from sqlalchemy.orm import sessionmaker, declarative_base, Session
-from .graph_operations import get_full_graph
+from .kg import get_full_graph
 
 # ------------------------------
 # Database initialization
