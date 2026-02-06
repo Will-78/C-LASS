@@ -63,7 +63,7 @@ class DBManager:
                     return False
 
                 # Hash and Create
-                hashed_pw = hash_password(password)
+                hashed_pw = self.hash_password(password)
                 db_user = User(
                     username=username,
                     password=hashed_pw,
@@ -87,7 +87,7 @@ class DBManager:
                 return None
 
             # Check if hashed password matches
-            hashed_input = hash_password(password)
+            hashed_input = self.hash_password(password)
             if user.password != hashed_input:
                 return None
 
