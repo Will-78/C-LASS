@@ -1,9 +1,34 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { InteractiveNvlWrapper } from '@neo4j-nvl/react';
+import  NodeView  from './nodeview';
+
+interface GraphNode {
+  id: string;
+  caption: string;
+  size: number;
+  color: string;
+  type: string;
+  desc: string;
+}
+
+interface GraphRel {
+  id: string;
+  from: string;
+  to: string;
+  caption: string;
+}
+
+interface GraphData {
+  nodes: GraphNode[];
+  rels: GraphRel[];
+}
 
 export default function GraphView() {
-  const [graphData, setGraphData] = useState({ nodes: [], rels: [] });
+  const [graphData, setGraphData] = useState<GraphData>({ nodes: [], rels: [] });
+  const [selectedNode, setSelectedNode] = useState<any | null>(null);
+
+  // TODO: optimize label checks
 
   useEffect(() => {
     async function fetchData() {
@@ -20,7 +45,16 @@ export default function GraphView() {
         color: 
             n.labels.includes('Document') ? '#ffffff' :  
             n.labels.includes('Chunk') ? '#f2b963' :
-            '#58abc4'
+            '#58abc4',
+        type: 
+            n.labels.includes('Document') ? n.properties.document_type :
+            n.labels.includes('Chunk') ? 'Chunk' :
+            n.labels[2]
+        ,
+        desc: 
+            n.labels.includes('Document') ? n.properties.path :
+            n.labels.includes('Chunk') ? n.properties.text :
+            'None',
       }));
 
       const formattedRels = data.edges.map((e: any) => ({
@@ -36,31 +70,52 @@ export default function GraphView() {
   }, []);
 
   return (
-    <div className="h-screen w-full bg-zinc-950">
-      <InteractiveNvlWrapper 
-        nodes={graphData.nodes} 
-        rels={graphData.rels}
-        mouseEventCallbacks={{
-          onDragStart: (node, event) => {
-            console.log(`Drag started on ${node[0].id}`);
-          },
-          onDrag: (node, event) => {
-            console.log(`Dragging node ${node[0].id}`);
-          },
-          onDragEnd: (node, event) => {
-            console.log(`Drag ended on node ${node[0].id}`);
-          },
-          onPan: (panning, event) => {},
-          onZoom: (zoomLevel, event) => {}
-        }}
-        nvlOptions={{
-            layout: 'forceDirected',
-            initialZoom: 1.0,
-            minZoom: 0.05,
-            maxZoom: 5.0,
-            renderer: 'canvas'
+    <div className="graph-layout">
+      {selectedNode && (
+        <NodeView node={selectedNode} 
+          onClose={() => setSelectedNode(null)}
+          onSave={(updatedNode: GraphNode) => {
+            
+            setGraphData(prevData => ({
+              ...prevData,
+              nodes: prevData.nodes.map(n => n.id === updatedNode.id ? { ...n, ...updatedNode } : n),
+            }));
+
+            setSelectedNode(null);
           }}
-      />
+        />
+      )}
+
+      <div className="graph-canvas">
+        <InteractiveNvlWrapper 
+          nodes={graphData.nodes} 
+          rels={graphData.rels}
+          mouseEventCallbacks={{
+            onNodeClick(node, event) {
+              setSelectedNode(null);
+              setSelectedNode(node);
+            },
+            onDragStart: (node, event) => {
+              console.log(`Drag started on ${node[0].id}`);
+            },
+            onDrag: (node, event) => {
+              console.log(`Dragging node ${node[0].id}`);
+            },
+            onDragEnd: (node, event) => {
+              console.log(`Drag ended on node ${node[0].id}`);
+            },
+            onPan: (panning, event) => {},
+            onZoom: (zoomLevel, event) => {}
+          }}
+          nvlOptions={{
+              layout: 'forceDirected',
+              initialZoom: 1.0,
+              minZoom: 0.05,
+              maxZoom: 5.0,
+              renderer: 'canvas'
+            }}
+        />
+      </div>
     </div>
   );
 }
