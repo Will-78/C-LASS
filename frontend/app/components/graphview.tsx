@@ -100,6 +100,15 @@ export default function GraphView() {
       {selectedNode && (
         <NodeView node={selectedNode} 
           onClose={() => setSelectedNode(null)}
+          deleteNode={(deleteNode: GraphNode) => {
+            setGraphData(prevData => ({
+              ...prevData,
+              nodes: prevData.nodes.filter(n => n.id !== deleteNode.id),
+              rels: prevData.rels.filter(r => r.from !== deleteNode.id && r.to !== deleteNode.id)
+            }));
+
+            setSelectedNode(null);
+          }}
           onSave={(updatedNode: GraphNode) => {
             
             setGraphData(prevData => ({
@@ -109,6 +118,14 @@ export default function GraphView() {
 
             setSelectedNode(null);
           }}
+        />
+      )}
+
+      {/* Backdrop allows clicking off menu to close it */}
+      {menuData && (
+        <div 
+          className="fixed inset-0 z-10" 
+          onClick={() => setMenuData(null)} 
         />
       )}
 
@@ -128,7 +145,7 @@ export default function GraphView() {
             onClick={createNewNode}
             className="w-full text-left px-4 py-2 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center gap-2 font-medium"
           >
-            <span>+</span> Add New Node
+            Add New Node
           </button>
         </div>
       )}

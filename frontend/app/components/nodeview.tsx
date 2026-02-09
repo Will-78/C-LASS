@@ -1,9 +1,10 @@
 'use client';
 import { useState, useEffect } from 'react';
 
-export default function NodeView({ node, onClose, onSave }: { 
+export default function NodeView({ node, onClose, deleteNode, onSave }: { 
     node: any;
     onClose?: () => void;
+    deleteNode?: (updatedNode: any) => void
     onSave?: (updatedNode: any) => void 
 }) {
 
@@ -12,6 +13,10 @@ export default function NodeView({ node, onClose, onSave }: {
     const handleClose = () => {
         setIsVisible(false);
         onClose?.();
+    };
+
+    const handleDelete = () => {
+        deleteNode?.(tempNode);
     };
 
     const handleSave = () => {
@@ -47,6 +52,10 @@ export default function NodeView({ node, onClose, onSave }: {
                     <input className='field-value' value={String(value)} onChange={(e) => setTempNode({ ...tempNode, [key]: e.target.value })} />
                 </div>
             ))}
+
+            <button onClick={handleDelete} className='delete-button'>
+                Delete
+            </button>
 
             <button onClick={handleSave} className='save-button'>
                 Save
