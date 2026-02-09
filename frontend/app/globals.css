@@ -28,3 +28,51 @@ body {
 button {
   @apply bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600;
 }
+
+.graph-layout {
+  position: relative;
+  height: 88vh;
+}
+
+.node-panel {
+  position: absolute;
+  right: 12px;
+  top: 12px;
+  bottom: 12px;
+  width: 320px;
+  max-height: 100%;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: rgba(20, 20, 20, 0.92);
+  color: #fff;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+  backdrop-filter: blur(6px);
+  z-index: 5;
+}
+
+.graph-canvas {
+  position: absolute;
+  inset: 0;
+  box-sizing: border-box;
+}
+
+.field-label {
+  font-weight: 600;
+  margin-top: 12px;
+}
+
+.field-value {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 6px 12px;
+  color: #ccc;
+  background: rgba(100, 100, 100, 0.3);
+  border-radius: 20px;
+  line-height: normal;
+}
+
+.node-title {
+  font-size: 2em;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
