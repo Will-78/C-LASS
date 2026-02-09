@@ -96,32 +96,21 @@ export default function GraphView() {
   };
 
   return (
-    <div className="h-screen w-full bg-zinc-950">
-      <InteractiveNvlWrapper
-        nodes={graphData.nodes} 
-        rels={graphData.rels}
-        mouseEventCallbacks={{
-          onDragStart: (node, event) => {
-            console.log(`Drag started on ${node[0].id}`);
-          },
-          onDrag: (node, event) => {
-            console.log(`Dragging node ${node[0].id}`);
-          },
-          onDragEnd: (node, event) => {
-            console.log(`Drag ended on node ${node[0].id}`);
-          },
-          onPan: (panning, event) => {},
-          onZoom: (zoomLevel, event) => {},
-          onCanvasClick: (event) => {handleCanvasClick(event)}
-        }}
-        nvlOptions={{
-            layout: 'forceDirected',
-            initialZoom: 1.0,
-            minZoom: 0.05,
-            maxZoom: 5.0,
-            renderer: 'canvas'
+    <div className="graph-layout">
+      {selectedNode && (
+        <NodeView node={selectedNode} 
+          onClose={() => setSelectedNode(null)}
+          onSave={(updatedNode: GraphNode) => {
+            
+            setGraphData(prevData => ({
+              ...prevData,
+              nodes: prevData.nodes.map(n => n.id === updatedNode.id ? { ...n, ...updatedNode } : n),
+            }));
+
+            setSelectedNode(null);
           }}
-      />
+        />
+      )}
 
       {menuData && (
         <div 
@@ -144,22 +133,6 @@ export default function GraphView() {
         </div>
       )}
 
-    <div className="graph-layout">
-      {selectedNode && (
-        <NodeView node={selectedNode} 
-          onClose={() => setSelectedNode(null)}
-          onSave={(updatedNode: GraphNode) => {
-            
-            setGraphData(prevData => ({
-              ...prevData,
-              nodes: prevData.nodes.map(n => n.id === updatedNode.id ? { ...n, ...updatedNode } : n),
-            }));
-
-            setSelectedNode(null);
-          }}
-        />
-      )}
-
       <div className="graph-canvas">
         <InteractiveNvlWrapper 
           nodes={graphData.nodes} 
@@ -179,7 +152,8 @@ export default function GraphView() {
               console.log(`Drag ended on node ${node[0].id}`);
             },
             onPan: (panning, event) => {},
-            onZoom: (zoomLevel, event) => {}
+            onZoom: (zoomLevel, event) => {},
+            onCanvasClick: (event) => {handleCanvasClick(event)}
           }}
           nvlOptions={{
               layout: 'forceDirected',
