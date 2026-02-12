@@ -112,3 +112,52 @@ class KnowledgeGraphManager:
                 })
 
         return {"nodes": nodes, "edges": edges}
+    
+    def create_or_update_node(self, entity_id: str, labels: list, properties: dict):
+        props = properties.copy() 
+        props.pop("id", None)
+        props["name"] = props.get("name", entity_id)
+
+        label_str = ":".join(labels)
+
+        query = f"""
+        MERGE (n:__Entity__ {{id: $id}})
+        SET n:{label_str}
+        SET n += $props
+        RETURN n
+        """
+        return self.query(query, {"id": entity_id, "props": props})
+    
+    def create_or_update_relationship(self, from_id: str, to_id: str, rel_type: str, properties: dict):
+        rel_type = rel_type.upper().replace(" ", "_")
+        props = properties.copy()
+        
+        set_clauses = ", ".join([f"r.{key} = ${key}" for key in props.keys()])
+        set_part = f"SET {set_clauses}" if set_clauses else ""
+        
+        query = f"""
+        MATCH (a:__Entity__ {{id: $from_id}})
+        MATCH (b:__Entity__ {{id: $to_id}})
+        MERGE (a)-[r:{rel_type}]->(b)
+        {set_part}
+        RETURN type(r)
+        """
+        return self.query(query, {"from_id": from_id, "to_id": to_id, **props})
+    
+    def delete_unattached_nodes(self):
+        query = f"""
+        MATCH (n)
+        WHERE NOT (n)--()
+        DETACH DELETE n
+        RETURN count(n) AS deleted
+        """
+        return self.query(query)
+    
+    def backfill_entity_ids(self):
+        query = f"""
+        MATCH (n)
+        WHERE n.name IS NOT NULL AND n.id IS NULL
+        SET n.id = n.name
+        RETURN count(n) AS updated
+        """
+        return self.query(query)

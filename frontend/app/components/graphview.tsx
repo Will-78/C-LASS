@@ -4,12 +4,13 @@ import { InteractiveNvlWrapper } from '@neo4j-nvl/react';
 import  NodeView  from './nodeview';
 
 interface GraphNode {
-  id: string;
+  id: string;               // Unique identifier for the node (can't be used for database operations)
   caption: string;
   size: number;
   color: string;
   type: string;
   desc: string;
+  entryId: string | number; // Database label id
 }
 
 interface GraphRel {
@@ -57,6 +58,8 @@ export default function GraphView() {
             n.labels.includes('Document') ? n.properties.path :
             n.labels.includes('Chunk') ? n.properties.text :
             'None',
+        entryId:
+            n.properties.id ? n.properties.id : null,
       }));
 
       const formattedRels = data.edges.map((e: any) => ({
@@ -78,6 +81,54 @@ export default function GraphView() {
     });
   }, []);
 
+  const saveChanges = async () => {
+    try {
+
+      // reformat data to match backend expectations
+      const reformattedNodes = graphData.nodes
+        .filter(n => n.entryId)
+        .map(n => ({
+          id: n.entryId,
+          
+          labels: n.type === 'Document' ? ['Document'] : 
+                  n.type === 'Chunk' ? ['Chunk'] :
+                  n.type != undefined ? ['Entity', n.type] : ['Entity'],
+
+          properties: n.type === 'Document' ? { document_type: n.type, path: n.desc } :
+                      n.type === 'Chunk' ? { text: n.desc } :
+                      { name: n.caption }
+      }));
+
+      const reformattedRels = graphData.rels.map(r => ({
+        from: r.from,
+        to: r.to,
+        type: r.caption,
+        properties: {}
+      }));
+
+      const reformattedGraphData = {
+        nodes: reformattedNodes,
+        edges: reformattedRels
+      };
+
+
+      const response = await fetch('/api/save-graph-info', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(reformattedGraphData)
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save graph changes');
+      }
+
+    } catch (error) {
+      console.error('Error saving graph changes:', error);
+    }
+  };
+
   const createNewNode = () => {
     if (!menuData) return;
 
@@ -85,7 +136,8 @@ export default function GraphView() {
       id: `node-${Date.now()}`,
       caption: 'New Entity',
       size: 20,
-      color: '#10b981'
+      color: '#10b981',
+      entryId: `node-${Date.now()}`
     };
 
     setGraphData(prev => ({
@@ -198,9 +250,8 @@ export default function GraphView() {
         onClick={() => {
           setSelectedNode(null);
           setMenuData(null);
-          if (changesMade) {
-            setChangesMade(false);
-          }
+          saveChanges();
+          setChangesMade(false);
         }}
       >
         Save Changes

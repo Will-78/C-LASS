@@ -82,3 +82,17 @@ def signin(auth_request: AuthRequest):
 @app.get("/get-graph-info")
 def get_graph_info():
     return kg_manager.get_full_graph()
+
+@app.post("/save-graph-info")
+def save_graph_info(graph_data: dict):
+    nodes = graph_data.get("nodes", [])
+    edges = graph_data.get("edges", [])
+
+    #TODO: make this a try/catch
+    for node in nodes:
+        kg_manager.create_or_update_node(node["id"], node["labels"], node["properties"])
+
+    for edge in edges:
+        kg_manager.create_or_update_relationship(edge["from"], edge["to"], edge["type"], edge["properties"])
+    
+    return {"message": "Graph information saved successfully"}

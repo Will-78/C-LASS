@@ -43,7 +43,7 @@ export default function NodeView({ node, onClose, deleteNode, onSave }: {
             </div>
 
             {Object.entries(tempNode)
-            .filter(([key, _]) => !['id', 'finestIndex', 'size'].includes(key) )
+            .filter(([key, _]) => !['id', 'finestIndex', 'size', 'entryId'].includes(key) )
             .map(([key, value]) => (
                 <div key={key}>
                     <div className='field-label'>
