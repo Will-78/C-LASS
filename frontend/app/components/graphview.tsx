@@ -26,7 +26,9 @@ interface GraphData {
 
 export default function GraphView() {
   const [graphData, setGraphData] = useState({ nodes: [], rels: [] });
-  const [menuData, setMenuData] = useState(null); // menu for adding nodes
+  const [menuData, setMenuData] = useState(null); // menu for adding nodes and relationship
+  const [relMenu, setRelMenu] = useState(false); // menu for adding relationships
+  const [newRelationship, setNewRelationship] = useState<GraphRel | null>(null);
   const [selectedNode, setSelectedNode] = useState<any | null>(null);
 
   // TODO: optimize label checks
@@ -95,6 +97,39 @@ export default function GraphView() {
     setMenuData(null);
   };
 
+  const createNewRelationship = () => {
+    if (!menuData) return;
+    setRelMenu(true);
+    setMenuData(null);
+  }
+
+  const handleAddRelationship = () => {
+    let nodeId1 = graphData.nodes.find(item => item.caption === newRelationship.from)?.id;
+    let nodeId2 = graphData.nodes.find(item => item.caption === newRelationship.to)?.id;
+
+    if (!nodeId1 || !nodeId2) {
+      const missing = !nodeId1 && !nodeId2 ? "Both nodes" : !nodeId1 ? `'${newRelationship.from}'` : `'${newRelationship.to}'`;
+      alert(`Error: ${missing} does not exist in the graph.`);
+      return;
+    }
+
+    setRelMenu(false);
+
+    const newRel = {
+      id: `rel-${Date.now()}`,
+      from: nodeId1,
+      to: nodeId2,
+      caption: newRelationship.caption
+    };
+
+    setGraphData(prev => ({
+      ...prev,
+      rels: [...prev.rels, newRel]
+    }));
+
+    setNewRelationship(null);
+  }
+
   return (
     <div className="graph-layout">
       {selectedNode && (
@@ -119,6 +154,55 @@ export default function GraphView() {
             setSelectedNode(null);
           }}
         />
+      )}
+
+      {relMenu && (
+        <div className="fixed inset-0 flex items-center justify-center z-50">
+          {/* This wrapper centers it on the screen; the z-50 ensures it stays on top */}
+          
+          <div className="flex flex-col gap-3 h-auto w-80 p-6 bg-[#141414eb] text-white shadow-2xl rounded-lg border border-gray-700">
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-bold uppercase tracking-wider text-gray-400">From:</label>
+              <input 
+                className="bg-gray-800 border border-gray-600 p-2 rounded text-white focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                placeholder="Node Caption"
+                value={newRelationship?.from || ""} 
+                onChange={(e) => setNewRelationship({ ...newRelationship, from: e.target.value })}
+              />
+              <label className="text-xs font-bold uppercase tracking-wider text-gray-400">Caption:</label>
+              <input 
+                className="bg-gray-800 border border-gray-600 p-2 rounded text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Relationship Caption"
+                value={newRelationship?.caption || ""}  
+                onChange={(e) => setNewRelationship({ ...newRelationship, caption: e.target.value })}
+              />
+              <label className="text-xs font-bold uppercase tracking-wider text-gray-400">To:</label>
+              <input 
+                className="bg-gray-800 border border-gray-600 p-2 rounded text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Node Caption"
+                value={newRelationship?.to || ""} 
+                onChange={(e) => setNewRelationship({ ...newRelationship, to: e.target.value })} 
+              />
+            </div>
+
+            <button 
+              onClick={handleAddRelationship} 
+              className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors"
+            >
+              Add Relationship
+            </button>
+            <button 
+              onClick={ () => {
+                  setNewRelationship(null);
+                  setRelMenu(false);
+                }
+              }
+              className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
       )}
 
       {/* Backdrop allows clicking off menu to close it */}
@@ -146,6 +230,12 @@ export default function GraphView() {
             className="w-full text-left px-4 py-2 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center gap-2 font-medium"
           >
             Add New Node
+          </button>
+          <button 
+            onClick={createNewRelationship}
+            className="w-full text-left px-4 py-2 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center gap-2 font-medium"
+          >
+            Add Relationship
           </button>
         </div>
       )}
