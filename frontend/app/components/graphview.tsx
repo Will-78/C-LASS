@@ -28,6 +28,7 @@ export default function GraphView() {
   const [graphData, setGraphData] = useState({ nodes: [], rels: [] });
   const [menuData, setMenuData] = useState(null); // menu for adding nodes
   const [selectedNode, setSelectedNode] = useState<any | null>(null);
+  const [changesMade, setChangesMade] = useState(false);
 
   // TODO: optimize label checks
 
@@ -91,6 +92,8 @@ export default function GraphView() {
       ...prev,
       nodes: [...prev.nodes, newNode]
     }));
+
+    setChangesMade(true);
     
     setMenuData(null);
   };
@@ -108,6 +111,7 @@ export default function GraphView() {
             }));
 
             setSelectedNode(null);
+            setChangesMade(true);
           }}
           onSave={(updatedNode: GraphNode) => {
             
@@ -117,6 +121,7 @@ export default function GraphView() {
             }));
 
             setSelectedNode(null);
+            setChangesMade(true);
           }}
         />
       )}
@@ -181,6 +186,25 @@ export default function GraphView() {
             }}
         />
       </div>
+
+      <button 
+        className="absolute bottom-4 left-4 rounded-lg shadow px-4 py-2 border transition-colors z-[9999] disabled:opacity-50 disabled:cursor-not-allowed"
+        style={{
+          backgroundColor: changesMade ? 'white' : '#f3f4f6',
+          color: changesMade ? '#0f172a' : '#9ca3af',
+          borderColor: changesMade ? '#e2e8f0' : '#d1d5db'
+        }}
+        disabled={!changesMade}
+        onClick={() => {
+          setSelectedNode(null);
+          setMenuData(null);
+          if (changesMade) {
+            setChangesMade(false);
+          }
+        }}
+      >
+        Save Changes
+      </button>
     </div>
   );
 }
