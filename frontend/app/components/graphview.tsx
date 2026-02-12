@@ -249,6 +249,10 @@ export default function GraphView() {
               setSelectedNode(null);
               setSelectedNode(node);
             },
+            onRelationshipClick(rel, event) {
+              setSelectedNode(null);
+              setSelectedNode(rel);
+            },
             onDragStart: (node, event) => {
               console.log(`Drag started on ${node[0].id}`);
             },
