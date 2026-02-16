@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import { InteractiveNvlWrapper } from '@neo4j-nvl/react';
-import EntityView from './entityview';
+import EntityView from './entity-view';
 import GraphCurationMenu from './graph-curation-menu';
 import RelationshipMenu from './relationship-menu';
 import {
