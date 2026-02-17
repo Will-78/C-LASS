@@ -132,3 +132,10 @@ def signin(auth_request: AuthRequest):
         "message": "Signed in successfully",
         "role": role
     }
+    
+# ------------------------------
+# KNOWLEDGE GRAPH ENDPOINT
+# ------------------------------
+@app.get("/get-graph-info")
+def get_graph_info():
+    return kg_manager.get_full_graph()
