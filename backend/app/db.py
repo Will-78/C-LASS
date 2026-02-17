@@ -1,6 +1,6 @@
 import hashlib
-from sqlalchemy import create_engine, Column, Integer, String, text
-from sqlalchemy.orm import sessionmaker, declarative_base, Session
+from sqlalchemy import create_engine, Column, Integer, String, ForeignKey
+from sqlalchemy.orm import sessionmaker, declarative_base, relationship
 from contextlib import contextmanager
 
 # ------------------------------
@@ -14,13 +14,38 @@ def hash_password(password: str) -> str:
 # Database tables
 # ------------------------------
 Base = declarative_base()
+
 class User(Base):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String, unique=True, index=True)
-    password = Column(String)  # now stores hashed password
-    role = Column(String, default="Student")  # Student or Teacher
+    password = Column(String)
+    role = Column(String, default="Student")
+
+    # One to Many relationship of User -> ChatRecord
+    chats = relationship("ChatRecord", back_populates="user")
+
+
+class ChatRecord(Base):
+    __tablename__ = "chatRecords"
+
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+
+    user = relationship("User", back_populates="chats")
+    messages = relationship("ChatMetadata", back_populates="chat", cascade="all, delete-orphan")
+
+
+class ChatMetadata(Base):
+    __tablename__ = "chatMetadata"
+
+    id = Column(Integer, primary_key=True)
+    role = Column(String)  # user or ai
+    content = Column(String)
+
+    chat_id = Column(Integer, ForeignKey("chatRecords.id"), nullable=False)
+    chat = relationship("ChatRecord", back_populates="messages")
 
 
 # ------------------------------
@@ -28,22 +53,19 @@ class User(Base):
 # ------------------------------
 class DBManager:
     def __init__(self, database_url):
-        # Initialize engine
         self.engine = create_engine(
             database_url,
             connect_args={"check_same_thread": False}
         )
-        
+
         self.SessionLocal = sessionmaker(
-            bind=self.engine, 
-            autocommit=False, 
+            bind=self.engine,
+            autocommit=False,
             autoflush=False
         )
 
-        # Create tables if they don't exist
         Base.metadata.create_all(bind=self.engine)
 
-    # Yields db session, and commits after context scope ends
     @contextmanager
     def session_scope(self):
         db = self.SessionLocal()
@@ -56,16 +78,17 @@ class DBManager:
         finally:
             db.close()
 
-    # Creates a new user if the username does not exist
+    def get_user_by_username(self, username):
+        with self.session_scope() as db:
+            return db.query(User).filter(User.username == username).first()
+
     def user_signup(self, username, password, role):
         try:
             with self.session_scope() as db:
-                # Check if user already exists
                 existing_user = db.query(User).filter(User.username == username).first()
                 if existing_user:
                     return False
 
-                # Hash and Create
                 hashed_pw = hash_password(password)
                 db_user = User(
                     username=username,
@@ -74,22 +97,18 @@ class DBManager:
                 )
 
                 db.add(db_user)
-                
                 return True
 
         except Exception as e:
             print(f"Database error during signup: {e}")
             return False
-    
-    # Validates credentials, returns the user role or None otherwise
+
     def user_signin(self, username, password):
         with self.session_scope() as db:
-            # Check if user exists
             user = db.query(User).filter(User.username == username).first()
             if not user:
                 return None
 
-            # Check if hashed password matches
             hashed_input = hash_password(password)
             if user.password != hashed_input:
                 return None

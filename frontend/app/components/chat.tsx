@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 interface Message {
   id?: number;
@@ -10,35 +10,63 @@ interface Message {
 
 const Chat = () => {
   const [userMessage, setUserMessage] = useState('');
-  const [fullChatLog, setFullChatLog] = useState<Message[]>([{role: "ai", content: "Hello!"}]);
+  const [chatId, setChatId] = useState<number | null>(null);
+  const [fullChatLog, setFullChatLog] = useState<Message[]>([
+    { role: "ai", content: "Hello!" }
+  ]);
 
   const inputPlaceholder = "Enter message...";
 
-  const fetchResponse = async() => {
+  const fetchResponse = async () => {
     try {
+      const username = localStorage.getItem("username");
 
-      setFullChatLog(prevLog => [...prevLog, {id: Date.now(), role: "user", content: userMessage}]);
+      if (!username) {
+        alert("Please sign in first.");
+        return;
+      }
 
+      // Add user message immediately to UI
+      setFullChatLog(prevLog => [
+        ...prevLog,
+        { id: Date.now(), role: "user", content: userMessage }
+      ]);
+
+      const currentMessage = userMessage;
       setUserMessage('');
 
-      const response = await fetch('/api/generate_response', {
+      const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          message: userMessage
+          username: username,
+          chat_id: chatId,
+          message: currentMessage
         })
       });
 
       const data = await response.json();
 
-      setFullChatLog(prevLog => [...prevLog, {id: Date.now(), role: "ai", content: data.message}]);
-      
-    } catch (error) {
-      console.error("Error fetching response.", error);
+      if (!response.ok) {
+        throw new Error(data.detail || "Chat failed");
+      }
+
+      // Save chat_id for future messages
+      setChatId(data.chat_id);
+
+      // Add AI response to UI
+      setFullChatLog(prevLog => [
+        ...prevLog,
+        { id: Date.now(), role: "ai", content: data.response }
+      ]);
+
+    } catch (error: any) {
+      console.error("Error fetching response:", error);
+      alert(error.message || "Error fetching response.");
     }
-  }
+  };
 
   return (
     <div className="flex h-screen bg-[#050509] text-slate-100">
@@ -55,17 +83,22 @@ const Chat = () => {
                   Ask anything about SE450
                 </p>
               </div>
-
             </div>
 
-            <button className="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-300 hover:bg-slate-800">
+            <button
+              className="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-300 hover:bg-slate-800"
+              onClick={() => {
+                setChatId(null);
+                setFullChatLog([{ role: "ai", content: "Hello!" }]);
+              }}
+            >
               New chat
             </button>
 
           </header>
 
           <main className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
-            {fullChatLog.map((message, idx) => 
+            {fullChatLog.map((message, idx) =>
               <ChatMessage key={idx} message={message} />
             )}
           </main>
@@ -83,7 +116,7 @@ const Chat = () => {
                     if (e.key === 'Enter' && !e.shiftKey) {
                       e.preventDefault();
                       if (userMessage.trim()) {
-                      fetchResponse();
+                        fetchResponse();
                       }
                     }
                   }}
@@ -91,10 +124,10 @@ const Chat = () => {
 
                 <div className="mt-2 flex items-center justify-between text-[11px] text-slate-500">
                   <span>Model: KGTutor 1.0</span>
-                  <button 
-                  className="inline-flex items-center gap-1 rounded-full bg-emerald-500 px-3 py-1 text-xs font-medium text-black hover:bg-emerald-400"
-                  onClick={fetchResponse}
-                  disabled={!userMessage.trim()}
+                  <button
+                    className="inline-flex items-center gap-1 rounded-full bg-emerald-500 px-3 py-1 text-xs font-medium text-black hover:bg-emerald-400"
+                    onClick={fetchResponse}
+                    disabled={!userMessage.trim()}
                   >
                     <span>Send</span>
                     <span>↵</span>
@@ -114,8 +147,6 @@ const Chat = () => {
 }
 
 function ChatMessage({ message }: { message: Message }) {
-  // leaving this for later bc this killed me
-  
   return (
     <div className={`chat-message ${message.role}`}>
       <span className="role">{message.role}: </span>
