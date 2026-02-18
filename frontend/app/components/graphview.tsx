@@ -30,6 +30,7 @@ export default function GraphView() {
   const [menuData, setMenuData] = useState(null); // menu for adding nodes
   const [selectedNode, setSelectedNode] = useState<any | null>(null);
   const [changesMade, setChangesMade] = useState(false);
+  const [nodesToDelete, setNodesToDelete] = useState<string[]>([]);
 
   // TODO: optimize label checks
 
@@ -108,7 +109,8 @@ export default function GraphView() {
 
       const reformattedGraphData = {
         nodes: reformattedNodes,
-        edges: reformattedRels
+        edges: reformattedRels,
+        nodesToDelete: nodesToDelete
       };
 
 
@@ -123,6 +125,8 @@ export default function GraphView() {
       if (!response.ok) {
         throw new Error('Failed to save graph changes');
       }
+
+      setNodesToDelete([]);
 
     } catch (error) {
       console.error('Error saving graph changes:', error);
@@ -164,6 +168,8 @@ export default function GraphView() {
 
             setSelectedNode(null);
             setChangesMade(true);
+
+            setNodesToDelete(prev => [...prev, deleteNode.entryId.toString()]);
           }}
           onSave={(updatedNode: GraphNode) => {
             

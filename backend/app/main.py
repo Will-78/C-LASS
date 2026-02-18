@@ -87,12 +87,24 @@ def get_graph_info():
 def save_graph_info(graph_data: dict):
     nodes = graph_data.get("nodes", [])
     edges = graph_data.get("edges", [])
+    nodesToDelete = graph_data.get("nodesToDelete", [])
 
-    #TODO: make this a try/catch
-    for node in nodes:
-        kg_manager.create_or_update_node(node["id"], node["labels"], node["properties"])
+    # Delete nodes that are marked for deletion
+    try:
 
-    for edge in edges:
-        kg_manager.create_or_update_relationship(edge["from"], edge["to"], edge["type"], edge["properties"])
+        for node in nodes:
+            kg_manager.create_or_update_node(node["id"], node["labels"], node["properties"])
+
+        for edge in edges:
+            kg_manager.create_or_update_relationship(edge["from"], edge["to"], edge["type"], edge["properties"])
+
+        for node_id in nodesToDelete:
+            kg_manager.delete_node(node_id)
+
+    except Exception as e:
+        print(f"Error saving graph information: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+        #revert changes if any error occurs
+        
     
     return {"message": "Graph information saved successfully"}
