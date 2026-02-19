@@ -25,7 +25,7 @@ kg_manager = KnowledgeGraphManager(URI, AUTH)
 # ------------------------------
 # LLM + GraphRAG MANAGER
 # ------------------------------
-tutor_manager = TutorManager(kg_manager)
+tutor_manager = TutorManager(kg_manager, os.environ["OPENAI_API_KEY"])
 
 
 # ------------------------------
