@@ -75,7 +75,8 @@ class TutorManager():
         embedder = OpenAIEmbeddings(model="text-embedding-ada-002")
         self.retriever = HybridCypherRetriever(
             kg_manager.driver,
-            index_name="text_embeddings",
+            vector_index_name="text_embeddings",
+            fulltext_index_name ="text_fulltext",
             embedder=embedder,
             retrieval_query=RETRIEVAL_QUERY
         )
