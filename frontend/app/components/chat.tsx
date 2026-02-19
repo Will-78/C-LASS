@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from "react";
+import ReactMarkdown from 'react-markdown';
 
 interface Message {
   id?: number;
@@ -10,16 +11,22 @@ interface Message {
 
 const Chat = () => {
   const [userMessage, setUserMessage] = useState('');
-  const [fullChatLog, setFullChatLog] = useState<Message[]>([{role: "ai", content: "Hello!"}]);
+  const [fullChatLog, setFullChatLog] = useState<Message[]>([{role: "ai", content: "How can I assist you?"}]);
+  const [generatingResponse, setGeneratingResponse] = useState(false);
+  const [streamedText, setStreamedText] = useState('');
 
   const inputPlaceholder = "Enter message...";
 
-  const fetchResponse = async() => {
+  const streamResponse = async() => {
     try {
 
       setFullChatLog(prevLog => [...prevLog, {id: Date.now(), role: "user", content: userMessage}]);
 
       setUserMessage('');
+
+      setGeneratingResponse(true);
+      let ongoingText = "..."
+      setStreamedText(ongoingText);
 
       const response = await fetch('/api/generate_response', {
         method: 'POST',
@@ -31,9 +38,30 @@ const Chat = () => {
         })
       });
 
-      const data = await response.json();
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder("utf-8");
+      let done = false;
+      let firstChunkLoaded = false;
 
-      setFullChatLog(prevLog => [...prevLog, {id: Date.now(), role: "ai", content: data.message}]);
+      while (!done) {
+        const {value, done: readerDone} = await reader.read();
+        done = readerDone;
+        
+        if (value) {
+          if (!firstChunkLoaded) {
+            ongoingText = "";
+            firstChunkLoaded = true;
+          }
+
+          const chunkValue = decoder.decode(value, { stream: true });
+
+          ongoingText = ongoingText + chunkValue;
+          setStreamedText(ongoingText);
+        }
+      }
+      
+      setGeneratingResponse(false);
+      setFullChatLog(prevLog => [...prevLog, {id: Date.now(), role: "ai", content: ongoingText}]);
       
     } catch (error) {
       console.error("Error fetching response.", error);
@@ -68,6 +96,17 @@ const Chat = () => {
             {fullChatLog.map((message, idx) => 
               <ChatMessage key={idx} message={message} />
             )}
+
+            {generatingResponse &&
+              <div className={`chat-message ai`}>
+                <span className="role">ai: </span>
+                <span className="content">
+                  <ReactMarkdown>
+                    {streamedText}
+                  </ReactMarkdown>
+                </span>
+              </div>
+              }
           </main>
 
           <footer className="border-t border-slate-800 px-4 py-3">
@@ -80,10 +119,10 @@ const Chat = () => {
                   placeholder={inputPlaceholder}
                   className="w-full resize-none bg-transparent text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none"
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
+                    if (e.key === 'Enter' && !e.shiftKey && !generatingResponse) {
                       e.preventDefault();
                       if (userMessage.trim()) {
-                      fetchResponse();
+                      streamResponse();
                       }
                     }
                   }}
@@ -93,8 +132,8 @@ const Chat = () => {
                   <span>Model: KGTutor 1.0</span>
                   <button 
                   className="inline-flex items-center gap-1 rounded-full bg-emerald-500 px-3 py-1 text-xs font-medium text-black hover:bg-emerald-400"
-                  onClick={fetchResponse}
-                  disabled={!userMessage.trim()}
+                  onClick={streamResponse}
+                  disabled={!userMessage.trim() || generatingResponse}
                   >
                     <span>Send</span>
                     <span>↵</span>
@@ -119,7 +158,11 @@ function ChatMessage({ message }: { message: Message }) {
   return (
     <div className={`chat-message ${message.role}`}>
       <span className="role">{message.role}: </span>
-      <span className="content">{message.content}</span>
+      <span className="content">
+        <ReactMarkdown>
+          {message.content}
+        </ReactMarkdown>
+        </span>
     </div>
   );
 }
