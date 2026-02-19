@@ -22,6 +22,7 @@ export default function GraphView() {
   const [selectedEntity, setSelectedEntity] = useState<GraphEntity | null>(null);
   const [changesMade, setChangesMade] = useState(false);
   const [EntitiesToDelete, setEntitiesToDelete] = useState<Set<any>>(new Set());
+  const [isSaving, setIsSaving] = useState(false);
 
   // TODO: optimize label checks
 
@@ -50,6 +51,7 @@ export default function GraphView() {
   );
 
   const saveChanges = async () => {
+    setIsSaving(true);
     try {
       const reformattedGraphData = buildSavePayload(graphData, EntitiesToDelete);
       const response = await fetch('/api/save-graph-info', {
@@ -64,10 +66,14 @@ export default function GraphView() {
         throw new Error('Failed to save graph changes');
       }
 
+      alert('Graph changes saved successfully!');
+
       setEntitiesToDelete(new Set());
 
     } catch (error) {
       console.error('Error saving graph changes:', error);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -254,7 +260,7 @@ export default function GraphView() {
           color: changesMade ? '#0f172a' : '#9ca3af',
           borderColor: changesMade ? '#e2e8f0' : '#d1d5db'
         }}
-        disabled={!changesMade}
+        disabled={!changesMade || isSaving}
         onClick={() => {
           setSelectedEntity(null);
           setMenuData(null);
@@ -262,8 +268,14 @@ export default function GraphView() {
           setChangesMade(false);
         }}
       >
-        Save Changes
+        {isSaving ? 'Saving…' : 'Save Changes'}
       </button>
+
+      {isSaving && (
+        <div className="absolute bottom-4 left-40 rounded-lg px-3 py-2 text-sm bg-slate-900 text-white shadow z-[9999]">
+          Saving changes…
+        </div>
+      )}
     </div>
   );
 }
