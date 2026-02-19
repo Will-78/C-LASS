@@ -1,4 +1,4 @@
-from neo4j_graphrag.retrievers import VectorCypherRetriever
+from neo4j_graphrag.retrievers import HybridCypherRetriever
 from neo4j_graphrag.embeddings.openai import OpenAIEmbeddings
 from .kg import KnowledgeGraphManager
 from openai import AsyncOpenAI
@@ -73,7 +73,7 @@ class TutorManager():
     def __init__(self, kg_manager: KnowledgeGraphManager, api_key):
         # initialize retriever
         embedder = OpenAIEmbeddings(model="text-embedding-ada-002")
-        self.retriever = VectorCypherRetriever(
+        self.retriever = HybridCypherRetriever(
             kg_manager.driver,
             index_name="text_embeddings",
             embedder=embedder,
