@@ -81,15 +81,15 @@ def signin(auth_request: AuthRequest):
 
 @app.get("/get-graph-info")
 def get_graph_info():
+    kg_manager.backfill_entity_ids()
     return kg_manager.get_full_graph()
 
 @app.post("/save-graph-info")
 def save_graph_info(graph_data: dict):
     nodes = graph_data.get("nodes", [])
     edges = graph_data.get("edges", [])
-    nodesToDelete = graph_data.get("nodesToDelete", [])
+    entitiesToDelete = graph_data.get("entitiesToDelete", [])
 
-    # Delete nodes that are marked for deletion
     try:
 
         for node in nodes:
@@ -98,13 +98,15 @@ def save_graph_info(graph_data: dict):
         for edge in edges:
             kg_manager.create_or_update_relationship(edge["from"], edge["to"], edge["type"], edge["properties"])
 
-        for node_id in nodesToDelete:
-            kg_manager.delete_node(node_id)
+        for entity in entitiesToDelete:
+            if entity[0] == "node":
+                kg_manager.delete_node(entity[1])
+
+            elif entity[0] == "rel":
+                kg_manager.delete_relationship_by_id(entity[1])
 
     except Exception as e:
         print(f"Error saving graph information: {e}")
         raise HTTPException(status_code=500, detail=str(e))
-        #revert changes if any error occurs
-        
     
     return {"message": "Graph information saved successfully"}

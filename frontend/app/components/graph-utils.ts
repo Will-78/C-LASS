@@ -73,7 +73,7 @@ export const formatGraphResponse = (data: ApiGraphResponse): GraphData => {
 export const normalizeRelCaption = (caption: string) =>
   caption.trim().toUpperCase().replace(/\s+/g, '_');
 
-export const buildSavePayload = (graphData: GraphData) => {
+export const buildSavePayload = (graphData: GraphData, entitiesToDelete: Set<any>) => {
   const nodes = graphData.nodes
     .filter((node) => node.entryId)
     .map((node) => ({
@@ -101,5 +101,5 @@ export const buildSavePayload = (graphData: GraphData) => {
     properties: {},
   }));
 
-  return { nodes, edges };
+  return { nodes, edges, entitiesToDelete: Array.from(entitiesToDelete) };
 };

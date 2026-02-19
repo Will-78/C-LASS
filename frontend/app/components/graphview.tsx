@@ -21,7 +21,7 @@ export default function GraphView() {
   );
   const [selectedEntity, setSelectedEntity] = useState<GraphEntity | null>(null);
   const [changesMade, setChangesMade] = useState(false);
-  const [nodesToDelete, setNodesToDelete] = useState<string[]>([]);
+  const [EntitiesToDelete, setEntitiesToDelete] = useState<Set<any>>(new Set());
 
   // TODO: optimize label checks
 
@@ -51,8 +51,7 @@ export default function GraphView() {
 
   const saveChanges = async () => {
     try {
-
-      const reformattedGraphData = buildSavePayload(graphData);
+      const reformattedGraphData = buildSavePayload(graphData, EntitiesToDelete);
       const response = await fetch('/api/save-graph-info', {
         method: 'POST',
         headers: {
@@ -65,7 +64,7 @@ export default function GraphView() {
         throw new Error('Failed to save graph changes');
       }
 
-      setNodesToDelete([]);
+      setEntitiesToDelete(new Set());
 
     } catch (error) {
       console.error('Error saving graph changes:', error);
@@ -156,13 +155,16 @@ export default function GraphView() {
             setGraphData(prevData => ({
               ...prevData,
               nodes: prevData.nodes.filter(n => n.id !== deletedEntity.id),
-              rels: prevData.rels.filter(r => r.from !== deletedEntity.id && r.to !== deletedEntity.id)
+              rels: prevData.rels.filter(r => r.from !== deletedEntity.id && r.to !== deletedEntity.id &&
+                                           r.id !== deletedEntity.id)
             }));
 
             setSelectedEntity(null);
             setChangesMade(true);
 
-            setNodesToDelete(prev => [...prev, deleteNode.entryId.toString()]);
+            const entryId = deletedEntity.entryId ? ['node', deletedEntity.entryId.toString()] : ['rel', deletedEntity.id];
+
+            setEntitiesToDelete(prev => new Set(prev).add(entryId));
           }}
           onSave={(updatedEntity) => {
             

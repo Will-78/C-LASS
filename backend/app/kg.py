@@ -61,6 +61,10 @@ class KnowledgeGraphManager:
         query = "MATCH (n:__Entity__ {id: $entity_id}) DETACH DELETE n"
         return self.query(query, {"entity_id": entity_id})
 
+    def delete_relationship_by_id(self, rel_id: str):
+        query = "MATCH ()-[r]->() WHERE elementId(r) = $rel_id DELETE r"
+        return self.query(query, {"rel_id": rel_id})
+
     # 5. Removes a specific edge without deleting the nodes
     def delete_relationship(self, from_id: str, to_id: str, rel_type: str):
         rel_type = rel_type.upper().replace(" ", "_")
@@ -73,7 +77,7 @@ class KnowledgeGraphManager:
      # Get all node and edge information
     def get_full_graph(self):
         records, summary, keys = self.driver.execute_query(
-            "MATCH (n) OPTIONAL MATCH (n)-[r]->(m) RETURN n, r, m",
+            "MATCH (n:__Entity__) OPTIONAL MATCH (n)-[r]->(m) RETURN n, r, m",
             database_="neo4j",
         )
         
@@ -83,30 +87,29 @@ class KnowledgeGraphManager:
 
         for record in records:
             node_n = record["n"]
-            if node_n.element_id not in node_ids:
+            if node_n["id"] not in node_ids:
                 nodes.append({
-                    "id": node_n.element_id,
+                    "id": node_n["id"],
                     "labels": list(node_n.labels),
                     "properties": dict(node_n)
                 })
-                node_ids.add(node_n.element_id)
-
+                node_ids.add(node_n["id"])
             if record["r"] != None:    
                 rel = record["r"]
                 node_m = record["m"]
 
-                if node_m.element_id not in node_ids:
+                if node_m["id"] not in node_ids:
                     nodes.append({
-                        "id": node_m.element_id,
+                        "id": node_m["id"],
                         "labels": list(node_m.labels),
                         "properties": dict(node_m)
                     })
-                    node_ids.add(node_m.element_id)
+                    node_ids.add(node_m["id"])
 
                 edges.append({
                     "id": rel.element_id,
-                    "from": rel.start_node.element_id,
-                    "to": rel.end_node.element_id,
+                    "from": rel.start_node["id"],
+                    "to": rel.end_node["id"],
                     "type": rel.type,
                     "properties": dict(rel)
                 })
@@ -155,9 +158,8 @@ class KnowledgeGraphManager:
     
     def backfill_entity_ids(self):
         query = f"""
-        MATCH (n)
-        WHERE n.name IS NOT NULL AND n.id IS NULL
-        SET n.id = n.name
-        RETURN count(n) AS updated
+        MATCH (n:__Entity__)
+        SET n.id = toString(n.id)
+        RETURN n
         """
         return self.query(query)
