@@ -4,13 +4,6 @@ from sqlalchemy.orm import sessionmaker, declarative_base, Session
 from contextlib import contextmanager
 
 # ------------------------------
-# Password Encryption
-# ------------------------------
-def hash_password(password: str) -> str:
-    return hashlib.sha256(password.encode()).hexdigest()
-
-
-# ------------------------------
 # Database tables
 # ------------------------------
 Base = declarative_base()
@@ -55,6 +48,10 @@ class DBManager:
             raise
         finally:
             db.close()
+        
+    # Password encryption
+    def hash_password(self, password: str) -> str:
+        return hashlib.sha256(password.encode()).hexdigest()
 
     # Creates a new user if the username does not exist
     def user_signup(self, username, password, role):
@@ -66,7 +63,7 @@ class DBManager:
                     return False
 
                 # Hash and Create
-                hashed_pw = hash_password(password)
+                hashed_pw = self.hash_password(password)
                 db_user = User(
                     username=username,
                     password=hashed_pw,
@@ -90,7 +87,7 @@ class DBManager:
                 return None
 
             # Check if hashed password matches
-            hashed_input = hash_password(password)
+            hashed_input = self.hash_password(password)
             if user.password != hashed_input:
                 return None
 

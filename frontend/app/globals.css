@@ -24,7 +24,3 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
-
-button {
-  @apply bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600;
-}
