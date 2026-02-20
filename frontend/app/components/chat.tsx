@@ -100,7 +100,7 @@ const Chat = () => {
             {generatingResponse &&
               <div className={`chat-message ai`}>
                 <span className="role">ai: </span>
-                <span className="content">
+                <span className="prose max-w-none dark:prose-invert">
                   <ReactMarkdown>
                     {streamedText}
                   </ReactMarkdown>
@@ -158,7 +158,7 @@ function ChatMessage({ message }: { message: Message }) {
   return (
     <div className={`chat-message ${message.role}`}>
       <span className="role">{message.role}: </span>
-      <span className="content">
+      <span className="prose max-w-none dark:prose-invert">
         <ReactMarkdown>
           {message.content}
         </ReactMarkdown>
