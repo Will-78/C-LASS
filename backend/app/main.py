@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException, Depends
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from typing import Optional
 import os
@@ -25,7 +26,7 @@ kg_manager = KnowledgeGraphManager(URI, AUTH)
 # ------------------------------
 # LLM + GraphRAG MANAGER
 # ------------------------------
-tutor_manager = TutorManager(kg_manager)
+tutor_manager = TutorManager(kg_manager, os.environ["OPENAI_API_KEY"])
 
 
 # ------------------------------
@@ -48,9 +49,8 @@ app = FastAPI()
 
 
 @app.post("/generate_response")
-def generate_response(request: Message) -> Message:
-    response = tutor_manager.query(request.message)
-    return Message(message=response)
+def generate_response(request: Message):
+    return StreamingResponse(tutor_manager.query(request.message), media_type="text/plain")
 
 
 @app.post("/signup")
