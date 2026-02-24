@@ -150,7 +150,7 @@ const Chat = () => {
               />
 
               <div className="mt-2 flex items-center justify-between text-[11px] text-slate-300">
-                <span>Model: KGTutor 1.0</span>
+                <span>Model: GPT-4o</span>
                 <button 
                 className="inline-flex items-center gap-1 rounded-full bg-emerald-500 px-3 py-1 text-xs font-medium text-black hover:bg-emerald-400"
                 onClick={streamResponse}
