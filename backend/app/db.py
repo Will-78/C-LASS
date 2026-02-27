@@ -3,6 +3,7 @@ from sqlalchemy import create_engine, Column, Integer, String, ForeignKey
 from sqlalchemy.orm import sessionmaker, declarative_base, relationship
 from contextlib import contextmanager
 
+
 # ------------------------------
 # Password Encryption
 # ------------------------------
@@ -15,6 +16,7 @@ def hash_password(password: str) -> str:
 # ------------------------------
 Base = declarative_base()
 
+
 class User(Base):
     __tablename__ = "users"
 
@@ -23,7 +25,6 @@ class User(Base):
     password = Column(String)
     role = Column(String, default="Student")
 
-    # One to Many relationship of User -> ChatRecord
     chats = relationship("ChatRecord", back_populates="user")
 
 
@@ -34,7 +35,11 @@ class ChatRecord(Base):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
 
     user = relationship("User", back_populates="chats")
-    messages = relationship("ChatMetadata", back_populates="chat", cascade="all, delete-orphan")
+    messages = relationship(
+        "ChatMetadata",
+        back_populates="chat",
+        cascade="all, delete-orphan"
+    )
 
 
 class ChatMetadata(Base):
@@ -52,6 +57,7 @@ class ChatMetadata(Base):
 # Database manager
 # ------------------------------
 class DBManager:
+
     def __init__(self, database_url):
         self.engine = create_engine(
             database_url,
@@ -66,6 +72,8 @@ class DBManager:
 
         Base.metadata.create_all(bind=self.engine)
 
+    # open a session, yield it for use, commit if successful,
+    # roll back and close the session if an exception occurs
     @contextmanager
     def session_scope(self):
         db = self.SessionLocal()
@@ -80,16 +88,22 @@ class DBManager:
 
     def get_user_by_username(self, username):
         with self.session_scope() as db:
-            return db.query(User).filter(User.username == username).first()
+            return db.query(User).filter(
+                User.username == username
+            ).first()
 
     def user_signup(self, username, password, role):
         try:
             with self.session_scope() as db:
-                existing_user = db.query(User).filter(User.username == username).first()
+                existing_user = db.query(User).filter(
+                    User.username == username
+                ).first()
+
                 if existing_user:
                     return False
 
                 hashed_pw = hash_password(password)
+
                 db_user = User(
                     username=username,
                     password=hashed_pw,
@@ -105,11 +119,15 @@ class DBManager:
 
     def user_signin(self, username, password):
         with self.session_scope() as db:
-            user = db.query(User).filter(User.username == username).first()
+            user = db.query(User).filter(
+                User.username == username
+            ).first()
+
             if not user:
                 return None
 
             hashed_input = hash_password(password)
+
             if user.password != hashed_input:
                 return None
 

@@ -4,12 +4,17 @@ from neo4j_graphrag.llm import OpenAILLM
 from neo4j_graphrag.generation import GraphRAG, RagTemplate
 from neo4j_graphrag.message_history import InMemoryMessageHistory
 from neo4j_graphrag.types import LLMMessage
-from .kg import KnowledgeGraphManager
 
-# Create prompt template
+from .kg import KnowledgeGraphManager
+from .db import ChatMetadata
+
+
+# ------------------------------
+# Prompt Template
+# ------------------------------
 prompt_template = RagTemplate(
-    template=''' 
-    You are a helpful tutor. Give hints to help guide the user to the answer to their question. 
+    template='''
+    You are a helpful tutor. Give hints to help guide the user to the answer to their question.
     Do not outright give the answer. Do not make up answers.
 
     Context:
@@ -17,10 +22,10 @@ prompt_template = RagTemplate(
 
     Examples:
         {examples}
-    
+
     Question:
         {query_text}
-        
+
     Response:
     ''',
     expected_inputs=["context", "query_text", "examples"]
@@ -31,43 +36,73 @@ prompt_template = RagTemplate(
 # LLM + GraphRAG Tutor manager
 # ------------------------------
 class TutorManager():
-    def __init__(self, kg_manager):
-        # retriever
+
+    def __init__(self, kg_manager: KnowledgeGraphManager):
         embedder = OpenAIEmbeddings(model="text-embedding-ada-002")
+
         retriever = VectorRetriever(
             kg_manager.driver,
             index_name="text_embeddings",
             embedder=embedder
         )
 
-        # LLM
-        # Note: the OPENAI_API_KEY must be in the env vars
-        llm = OpenAILLM(model_name="gpt-4o", model_params={"temperature": 0})
+        llm = OpenAILLM(
+            model_name="gpt-4o",
+            model_params={"temperature": 0}
+        )
 
-        # Initialize the RAG pipeline
-        self.rag = GraphRAG(retriever=retriever, llm=llm, prompt_template=prompt_template)
+        self.rag = GraphRAG(
+            retriever=retriever,
+            llm=llm,
+            prompt_template=prompt_template
+        )
 
-        # NOTE: this assumes only a single session can be used
-        # TODO: store this in database
-        self.history = InMemoryMessageHistory()
-        message = LLMMessage(role="assistant", content="Hello!")
-        self.history.add_message(message)
-    
-    # Query the LLM
-    def query(self, query_text):
-        # Add user message to history
-        message = LLMMessage(role="user", content=query_text)
-        self.history.add_message(message)
+    # -----------------------------------------
+    # Function to handle full chat pipeline, instead of it being in main
+    # -----------------------------------------
+    def handle_chat(self, db, chat_id: int, message_text: str):
 
-        # Retrieve relevant information and generate response
+        # save user message
+        user_message = ChatMetadata(
+            role="user",
+            content=message_text,
+            chat_id=chat_id
+        )
+        db.add(user_message)
+        db.flush()
+
+        # pull full convo history from DB
+        messages = (
+            db.query(ChatMetadata)
+            .filter(ChatMetadata.chat_id == chat_id)
+            .order_by(ChatMetadata.id)
+            .all()
+        )
+
+        # convert DB messages -> GraphRAG MessageHistory
+        message_history = InMemoryMessageHistory()
+
+        for msg in messages:
+            role = "assistant" if msg.role == "ai" else "user"
+            llm_message = LLMMessage(
+                role=role,
+                content=msg.content
+            )
+            message_history.add_message(llm_message)
+
+        # run GraphRAG search with full DB history
         response = self.rag.search(
-            query_text=query_text,
-            message_history=self.history,
+            query_text=message_text,
+            message_history=message_history,
             retriever_config={"top_k": 5}
         )
 
-        # Add response to history
-        message = LLMMessage(role="assistant", content=response.answer)
-        self.history.add_message(message)
+        # save response to DB
+        ai_message = ChatMetadata(
+            role="ai",
+            content=response.answer,
+            chat_id=chat_id
+        )
+        db.add(ai_message)
 
         return response.answer
