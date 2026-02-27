@@ -26,9 +26,7 @@ const isDocument = (labels: string[]) => labels.includes('Document');
 const isChunk = (labels: string[]) => labels.includes('Chunk');
 
 const getNodeCaption = (node: ApiNode) => {
-  if (isDocument(node.labels)) return 'Document';
-  if (isChunk(node.labels)) return 'Chunk';
-  return node.properties.name || 'Entity';
+  return node.properties.name || 'Unamed Entity';
 };
 
 const getNodeColor = (node: ApiNode) => {

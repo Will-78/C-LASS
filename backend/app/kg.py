@@ -1,7 +1,6 @@
 from neo4j import GraphDatabase
 from neo4j_graphrag.experimental.pipeline.kg_builder import SimpleKGPipeline
 from neo4j_graphrag.embeddings.openai import OpenAIEmbeddings
-from neo4j_graphrag.indexes import create_vector_index
 from neo4j_graphrag.llm import OpenAILLM
 
 # ------------------------------
@@ -80,40 +79,47 @@ class KnowledgeGraphManager:
     
      # Get all node and edge information
     def get_full_graph(self):
+        # Change the query to match all nodes (n) instead of just (n:__Entity__)
         records, summary, keys = self.driver.execute_query(
-            "MATCH (n:__Entity__) OPTIONAL MATCH (n)-[r]->(m) RETURN n, r, m",
-            database_="neo4j",
+            "MATCH (n) OPTIONAL MATCH (n)-[r]->(m) RETURN n, r, m"
         )
-        
+
         nodes = []
         edges = []
         node_ids = set()
 
         for record in records:
+            # Process Node 'n'
             node_n = record["n"]
-            if node_n["id"] not in node_ids:
+            # SAFETY: Check if 'id' exists, fallback to element_id if renaming hasn't run yet
+            n_id = node_n.get("id") or node_n.element_id
+            
+            if n_id not in node_ids:
                 nodes.append({
-                    "id": node_n["id"],
+                    "id": n_id,
                     "labels": list(node_n.labels),
                     "properties": dict(node_n)
                 })
-                node_ids.add(node_n["id"])
-            if record["r"] != None:    
+                node_ids.add(n_id)
+
+            # Process Relationship 'r' and Node 'm'
+            if record["r"] is not None:    
                 rel = record["r"]
                 node_m = record["m"]
+                m_id = node_m.get("id") or node_m.element_id
 
-                if node_m["id"] not in node_ids:
+                if m_id not in node_ids:
                     nodes.append({
-                        "id": node_m["id"],
+                        "id": m_id,
                         "labels": list(node_m.labels),
                         "properties": dict(node_m)
                     })
-                    node_ids.add(node_m["id"])
+                    node_ids.add(m_id)
 
                 edges.append({
                     "id": rel.element_id,
-                    "from": rel.start_node["id"],
-                    "to": rel.end_node["id"],
+                    "from": n_id, # Using the calculated ID
+                    "to": m_id,   # Using the calculated ID
                     "type": rel.type,
                     "properties": dict(rel)
                 })
@@ -172,32 +178,72 @@ class KnowledgeGraphManager:
         llm = OpenAILLM(model_name="gpt-4o", model_params={"temperature": 0})
         embedder = OpenAIEmbeddings(model="text-embedding-ada-002")
 
-        # run kg builder
         kg_builder = SimpleKGPipeline(
             llm=llm,
             driver=self.driver,
             embedder=embedder,
-            from_pdf=True
+            from_pdf=True,
+            perform_entity_resolution=True,
+            schema={
+                "node_types": [],           # Leave empty to allow discovery
+                "additional_node_types": True, # Allow LLM to create new labels
+                "additional_properties": False # DO NOT allow extra properties (keeps only 'name')
+            } 
         )
         await kg_builder.run_async(file_path=file_path)
 
-        # create vector indexes
-        create_vector_index(self.driver, name="text_embeddings", label="Chunk",
-                        embedding_property="embedding", dimensions=1536, similarity_fn="cosine")
-
-        # create fulltext index
-        self.driver.execute_query("""
-            CREATE FULLTEXT INDEX text_fulltext IF NOT EXISTS
-            FOR (n:Chunk) ON EACH [n.text]
+        # Create Vector Index (configured for ada-002)
+        self.query("""
+            CREATE VECTOR INDEX text_embeddings IF NOT EXISTS
+            FOR (n:Chunk) ON (n.embedding)
+            OPTIONS { indexConfig: { `vector.dimensions`: 1536, `vector.similarity_function`: 'cosine' } }
         """)
 
-        # give chunk nodes unique names
-        self.driver.execute_query("""
-            MATCH (n:Chunk)
-            WITH collect(n) AS nodes
-            UNWIND range(0, size(nodes) - 1) AS i
-            WITH nodes[i] AS node, i + 1 AS num
-            SET node.name = "Chunk_" + num
+        # Unqiue Renaming for Documents & Chunks
+        self.query("""
+            // 1. Rename Docs
+            OPTIONAL MATCH (existingD:Document) 
+            WHERE existingD.name STARTS WITH "Doc_"
+            WITH coalesce(max(toInteger(split(existingD.name, "_")[1])), 0) AS dOffset
+
+            MATCH (d:Document) 
+            WHERE d.name IS NULL OR NOT d.name STARTS WITH "Doc_"
+            WITH dOffset, d ORDER BY elementId(d)
+            WITH dOffset, collect(d) AS newDocs
+
+            // Use UNWIND and WITH to avoid the dot-notation error on lists
+            UNWIND range(0, size(newDocs) - 1) AS i
+            WITH dOffset, newDocs[i] AS docNode, i
+            SET docNode.name = "Doc_" + (dOffset + i + 1)
+
+            // Carry the context forward to the next part
+            WITH count(*) AS docsProcessed
+
+            // 2. Rename Chunks
+            OPTIONAL MATCH (existingC:Chunk) 
+            WHERE existingC.name STARTS WITH "Chunk_"
+            WITH coalesce(max(toInteger(split(existingC.name, "_")[1])), 0) AS cOffset
+
+            MATCH (c:Chunk) 
+            WHERE c.name IS NULL OR NOT c.name STARTS WITH "Chunk_"
+            WITH cOffset, c ORDER BY elementId(c)
+            WITH cOffset, collect(c) AS newChunks
+
+            // Use UNWIND and WITH again for Chunks
+            UNWIND range(0, size(newChunks) - 1) AS j
+            WITH cOffset, newChunks[j] AS chunkNode, j
+            SET chunkNode.name = "Chunk_" + (cOffset + j + 1)
+
+            RETURN count(*) AS chunksProcessed
         """)
 
-        self.setup_constraints()
+        # Set n.id to "Label:Name" for everything
+        self.query("""
+            MATCH (n)
+            WHERE n.name IS NOT NULL
+            WITH n, labels(n)[0] AS primaryLabel
+            SET n.id = CASE 
+                WHEN primaryLabel IN ['Chunk', 'Document'] THEN n.name 
+                ELSE primaryLabel + ":" + n.name 
+            END
+        """)

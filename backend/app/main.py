@@ -83,7 +83,7 @@ def signin(auth_request: AuthRequest):
 
 @app.get("/get-graph-info")
 def get_graph_info():
-    kg_manager.backfill_entity_ids()
+    # kg_manager.backfill_entity_ids()
     return kg_manager.get_full_graph()
 
 @app.post("/save-graph-info")
