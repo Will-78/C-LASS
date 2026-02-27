@@ -3,6 +3,7 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from typing import Optional
 from typing import List
+import shutil
 import os
 
 from .db import DBManager
@@ -113,10 +114,22 @@ def save_graph_info(graph_data: dict):
     return {"message": "Graph information saved successfully"}
 
 @app.post("/document-kg-builder")
-def document_kg_builder(files: List[UploadFile] = File(...)):
+async def document_kg_builder(files: List[UploadFile] = File(...)):
+    upload_dir = "/tmp/uploads"
+    os.makedirs(upload_dir, exist_ok=True)
+    
     try:
         for file in files:
-            print(file.filename)
+            # Save uploaded file to temporary directory
+            file_path = os.path.join(upload_dir, file.filename)
+            with open(file_path, "wb") as buffer:
+                shutil.copyfileobj(file.file, buffer)
+            
+            # Run document kg builder
+            await kg_manager.document_kg_builder(file_path)
+            
+            # Clean up after processing
+            os.remove(file_path)
     except Exception as e:
         print(f"Error from document upload: {e}")
         raise HTTPException(status_code=500, detail=str(e))

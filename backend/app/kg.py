@@ -1,4 +1,8 @@
 from neo4j import GraphDatabase
+from neo4j_graphrag.experimental.pipeline.kg_builder import SimpleKGPipeline
+from neo4j_graphrag.embeddings.openai import OpenAIEmbeddings
+from neo4j_graphrag.indexes import create_vector_index
+from neo4j_graphrag.llm import OpenAILLM
 
 # ------------------------------
 # Neo4j Knowledge graph manager
@@ -163,3 +167,37 @@ class KnowledgeGraphManager:
         RETURN n
         """
         return self.query(query)
+    
+    async def document_kg_builder(self, file_path):
+        llm = OpenAILLM(model_name="gpt-4o", model_params={"temperature": 0})
+        embedder = OpenAIEmbeddings(model="text-embedding-ada-002")
+
+        # run kg builder
+        kg_builder = SimpleKGPipeline(
+            llm=llm,
+            driver=self.driver,
+            embedder=embedder,
+            from_pdf=True
+        )
+        await kg_builder.run_async(file_path=file_path)
+
+        # create vector indexes
+        create_vector_index(self.driver, name="text_embeddings", label="Chunk",
+                        embedding_property="embedding", dimensions=1536, similarity_fn="cosine")
+
+        # create fulltext index
+        self.driver.execute_query("""
+            CREATE FULLTEXT INDEX text_fulltext IF NOT EXISTS
+            FOR (n:Chunk) ON EACH [n.text]
+        """)
+
+        # give chunk nodes unique names
+        self.driver.execute_query("""
+            MATCH (n:Chunk)
+            WITH collect(n) AS nodes
+            UNWIND range(0, size(nodes) - 1) AS i
+            WITH nodes[i] AS node, i + 1 AS num
+            SET node.name = "Chunk_" + num
+        """)
+
+        self.setup_constraints()
