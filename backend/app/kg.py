@@ -21,61 +21,43 @@ class KnowledgeGraphManager:
 
     # Ensures entities have unique IDs to prevent duplicates
     def setup_constraints(self):
-        self.query("CREATE CONSTRAINT IF NOT EXISTS FOR (n:__Entity__) REQUIRE n.id IS UNIQUE")
-
-    # Creates/Updates a node compatible with KG Builder.
-    # Uses the 'name' as the 'id' (Builder standard).
-    def add_node(self, label: str, name: str, properties: dict = None):
-        props = properties or {}
-        props['id'] = name
-        props['name'] = name
-        
-        # Apply the specific label AND the __Entity__ label
-        query = f"""
-        MERGE (n:__Entity__ {{id: $props.id}})
-        SET n:{label}, n += $props
-        RETURN n
-        """
-        return self.query(query, {"props": props})
-
-    # Creates a relationship between two __Entity__ nodes.
-    # Rel_type is automatically formatted to UPPER_CASE.
-    def create_relationship(self, from_id: str, to_id: str, rel_type: str):
-        rel_type = rel_type.upper().replace(" ", "_")
-        query = f"""
-        MATCH (a:__Entity__ {{id: $from_id}})
-        MATCH (b:__Entity__ {{id: $to_id}})
-        MERGE (a)-[r:{rel_type}]->(b)
-        RETURN type(r)
-        """
-        return self.query(query, {"from_id": from_id, "to_id": to_id})
-
-    # Bridges nodes to the chunks created by the KG Builder
-    def link_to_chunk(self, entity_id: str, chunk_id: str, rel_type: str = "FROM_CHUNK"):
-        query = f"""
-        MATCH (e:__Entity__ {{id: $e_id}})
-        MATCH (c:Chunk {{id: $c_id}})
-        MERGE (e)-[:{rel_type}]->(c)
-        """
-        return self.query(query, {"e_id": entity_id, "c_id": chunk_id})
-
-    # Deletes a node and all its relationships
+        self.query("CREATE CONSTRAINT node_id_unique IF NOT EXISTS FOR (n:__Entity__) REQUIRE n.id IS UNIQUE")
+        self.query("CREATE INDEX node_name_index IF NOT EXISTS FOR (n:__Entity__) ON (n.name)")
+    
     def delete_node(self, entity_id: str):
-        query = "MATCH (n:__Entity__ {id: $entity_id}) DETACH DELETE n"
+        query = "MATCH (n {id: $entity_id}) DETACH DELETE n"
         return self.query(query, {"entity_id": entity_id})
 
     def delete_relationship_by_id(self, rel_id: str):
         query = "MATCH ()-[r]->() WHERE elementId(r) = $rel_id DELETE r"
         return self.query(query, {"rel_id": rel_id})
+    
+    def create_or_update_node(self, entity_id: str, labels: list, properties: dict):
+        props = properties.copy()
+        props.pop("id", None)
+        props["name"] = props.get("name", entity_id)
 
-    # 5. Removes a specific edge without deleting the nodes
-    def delete_relationship(self, from_id: str, to_id: str, rel_type: str):
-        rel_type = rel_type.upper().replace(" ", "_")
+        label_str = ":".join(labels)
+
         query = f"""
-        MATCH (a:__Entity__ {{id: $from_id}})-[r:{rel_type}]->(b:__Entity__ {{id: $to_id}})
-        DELETE r
+        MERGE (n {{id: $id}})
+        SET n:{label_str}
+        SET n += $props
+        RETURN n
         """
-        return self.query(query, {"from_id": from_id, "to_id": to_id})
+        return self.query(query, {"id": entity_id, "props": props})
+    
+    def create_or_update_relationship(self, from_id: str, to_id: str, rel_type: str, properties: dict):
+        rel_type = rel_type.upper().replace(" ", "_")
+        
+        query = f"""
+        MATCH (a {{id: $from_id}})
+        MATCH (b {{id: $to_id}})
+        MERGE (a)-[r:{rel_type}]->(b)
+        SET r += $props
+        RETURN type(r)
+        """
+        return self.query(query, {"from_id": from_id, "to_id": to_id, "props": properties})
     
      # Get all node and edge information
     def get_full_graph(self):
@@ -126,54 +108,6 @@ class KnowledgeGraphManager:
 
         return {"nodes": nodes, "edges": edges}
     
-    def create_or_update_node(self, entity_id: str, labels: list, properties: dict):
-        props = properties.copy() 
-        props.pop("id", None)
-        props["name"] = props.get("name", entity_id)
-
-        label_str = ":".join(labels)
-
-        query = f"""
-        MERGE (n:__Entity__ {{id: $id}})
-        SET n:{label_str}
-        SET n += $props
-        RETURN n
-        """
-        return self.query(query, {"id": entity_id, "props": props})
-    
-    def create_or_update_relationship(self, from_id: str, to_id: str, rel_type: str, properties: dict):
-        rel_type = rel_type.upper().replace(" ", "_")
-        props = properties.copy()
-        
-        set_clauses = ", ".join([f"r.{key} = ${key}" for key in props.keys()])
-        set_part = f"SET {set_clauses}" if set_clauses else ""
-        
-        query = f"""
-        MATCH (a:__Entity__ {{id: $from_id}})
-        MATCH (b:__Entity__ {{id: $to_id}})
-        MERGE (a)-[r:{rel_type}]->(b)
-        {set_part}
-        RETURN type(r)
-        """
-        return self.query(query, {"from_id": from_id, "to_id": to_id, **props})
-    
-    def delete_unattached_nodes(self):
-        query = f"""
-        MATCH (n)
-        WHERE NOT (n)--()
-        DETACH DELETE n
-        RETURN count(n) AS deleted
-        """
-        return self.query(query)
-    
-    def backfill_entity_ids(self):
-        query = f"""
-        MATCH (n:__Entity__)
-        SET n.id = toString(n.id)
-        RETURN n
-        """
-        return self.query(query)
-    
     async def document_kg_builder(self, file_path):
         llm = OpenAILLM(model_name="gpt-4o", model_params={"temperature": 0})
         embedder = OpenAIEmbeddings(model="text-embedding-ada-002")
@@ -197,6 +131,11 @@ class KnowledgeGraphManager:
             CREATE VECTOR INDEX text_embeddings IF NOT EXISTS
             FOR (n:Chunk) ON (n.embedding)
             OPTIONS { indexConfig: { `vector.dimensions`: 1536, `vector.similarity_function`: 'cosine' } }
+        """)
+
+        self.query("""
+            CREATE FULLTEXT INDEX text_fulltext IF NOT EXISTS
+            FOR (n:Chunk) ON EACH [n.text]
         """)
 
         # Unqiue Renaming for Documents & Chunks
