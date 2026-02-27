@@ -1,7 +1,8 @@
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from typing import Optional
+from typing import List
 import os
 
 from .db import DBManager
@@ -110,3 +111,14 @@ def save_graph_info(graph_data: dict):
         raise HTTPException(status_code=500, detail=str(e))
     
     return {"message": "Graph information saved successfully"}
+
+@app.post("/document-kg-builder")
+def document_kg_builder(files: List[UploadFile] = File(...)):
+    try:
+        for file in files:
+            print(file.filename)
+    except Exception as e:
+        print(f"Error from document upload: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+    return {"message": f"Successfuly uploaded files"}

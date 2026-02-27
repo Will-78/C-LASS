@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import SignInPopup from "./SignInPopup";
+import SignInPopup from "./signin-popup";
 
 // props for UserIcon, current user info and functions to update user and role state
 type UserIconProps = {

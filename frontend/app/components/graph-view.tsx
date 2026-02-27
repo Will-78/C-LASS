@@ -11,18 +11,18 @@ import {
   RelationshipDraft,
 } from './graph-types';
 import { buildSavePayload, formatGraphResponse, normalizeRelCaption } from './graph-utils';
+import DocumentUpload from './document-upload'
 
 export default function GraphView() {
   const [graphData, setGraphData] = useState<GraphData>({ nodes: [], rels: [] });
   const [menuData, setMenuData] = useState<GraphMenuPosition | null>(null);
   const [relMenu, setRelMenu] = useState(false);
-  const [newRelationship, setNewRelationship] = useState<RelationshipDraft | null>(
-    null
-  );
+  const [newRelationship, setNewRelationship] = useState<RelationshipDraft | null>(null);
   const [selectedEntity, setSelectedEntity] = useState<GraphEntity | null>(null);
   const [changesMade, setChangesMade] = useState(false);
   const [EntitiesToDelete, setEntitiesToDelete] = useState<Set<any>>(new Set());
   const [isSaving, setIsSaving] = useState(false);
+  const [documentUploadMenu, setDocumentUploadMenu] = useState(false);
 
   // TODO: optimize label checks
 
@@ -215,6 +215,15 @@ export default function GraphView() {
         />
       )}
 
+      {/* Document upload */}
+      {documentUploadMenu &&
+        <DocumentUpload
+          onCancel={() => {
+            setDocumentUploadMenu(false);
+          }}  
+        />
+      }
+
       {/* Neo4j nvl wrapper */}
       <div className="absolute inset-0 box-border">
         <InteractiveNvlWrapper 
@@ -276,6 +285,18 @@ export default function GraphView() {
           Saving changes…
         </div>
       )}
+
+      {/* Document upload button */}
+      <button 
+        className={"absolute bottom-4 right-4 rounded-lg shadow px-4 py-2 border transition-colors z-[9999] disabled:opacity-50 disabled:cursor-not-allowed bg-white text-slate-900 border-slate-200 hover:bg-slate-100"}
+        disabled={documentUploadMenu}
+        onClick={() => {
+          setMenuData(null);
+          setDocumentUploadMenu(true);
+        }}
+      >
+        Document KG Builder
+      </button>
     </div>
   );
 }
