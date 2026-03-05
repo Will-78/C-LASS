@@ -4,9 +4,13 @@ import { useState, useEffect, useRef } from "react";
 import ReactMarkdown from 'react-markdown';
 
 interface Message {
-  id?: number;
   role: "user" | "assistant";
   content: string;
+}
+
+interface Chat {
+  id?: number;
+  title: string;
 }
 
 const Chat = () => {
@@ -15,7 +19,8 @@ const Chat = () => {
   const [fullChatLog, setFullChatLog] = useState<Message[]>([]);
   const [generatingResponse, setGeneratingResponse] = useState(false);
   const [streamedText, setStreamedText] = useState('');
-  const [chatId, setChatId] = useState<number | null>(null); // store chat session ID
+  const [chats, setChats] = useState<Chat[]>([]);
+  const [currentChat, setCurrentChat] = useState<Chat>({ id: undefined, title: 'New Chat' });
 
   const inputPlaceholder = "Enter message...";
 
@@ -33,17 +38,117 @@ const Chat = () => {
     }
   }, [fullChatLog.length]);
 
-  const streamResponse = async() => {
-    try {
-      // Generate a chatId if first time
-      if (!chatId) {
-        const newId = Date.now(); // simple unique ID
-        setChatId(newId);
+  useEffect(() => {
+    const fetchChats = async () => {
+      try {
+        const username = localStorage.getItem("username");
+        if (!username) return;
+
+        const response = await fetch('/api/get-user-chats', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            username: username
+          })
+        });
+
+        if (!response.ok) throw new Error('Failed to fetch chats');
+        const chatList = await response.json();
+        setChats(chatList.map((responseChat: any) => ({ 
+          id: responseChat.chat_id,
+          title: responseChat.title 
+        })));
+      } catch (error) {
+        console.error('Error getting chats:', error);
+      }
+    };
+
+    fetchChats();
+  }, []);
+
+  useEffect(() => {
+    const fetchChatHistory = async () => {
+      if (!currentChat?.id) {
+        setFullChatLog([]);
+        return;
       }
 
-      const currentChatId = chatId ?? Date.now();
+      try {
+        const response = await fetch('/api/get-chat-history', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chat_id: currentChat.id
+          })
+        });
 
-      setFullChatLog(prevLog => [...prevLog, {id: Date.now(), role: "user", content: userMessage}]);
+        if (!response.ok) throw new Error('Failed to fetch chat history');
+        const messages = await response.json();
+        setFullChatLog(messages);
+      } catch (error) {
+        console.error('Error fetching chat history:', error);
+        setFullChatLog([]);
+      }
+    };
+
+    fetchChatHistory();
+  }, [currentChat?.id]);
+
+  const createNewChat = async() => {
+        const username = localStorage.getItem("username");
+        if (!username) {
+          console.error("Username not found");
+          return;
+        }
+
+        const createResponse = await fetch('/api/create-chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            username: username,
+            message: userMessage
+          })
+        });
+
+        if (!createResponse.ok) {
+          throw new Error('Failed to create chat');
+        }
+
+        const createData = await createResponse.json();
+        const chatId = createData.chat_id;
+        
+        // Update current chat with the new ID
+        const newChat: Chat = { id: chatId, title: userMessage };
+        setCurrentChat(newChat);
+        
+        // Refresh chats list
+        const chatsResponse = await fetch('/api/get-user-chats', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: username })
+        });
+        if (chatsResponse.ok) {
+          const chatList = await chatsResponse.json();
+          setChats(chatList.map((responseChat: any) => ({ 
+            id: responseChat.chat_id,
+            title: responseChat.title 
+          })));
+        }
+      
+        return chatId
+  }
+
+  const streamResponse = async() => {
+    try {
+      console.log(chats)
+      let chatId = currentChat?.id;
+
+      // If this is a new chat, create it first
+      if (!chatId) {
+        chatId = await createNewChat();
+      }
+
+      setFullChatLog(prevLog => [...prevLog, {role: "user", content: userMessage}]);
       const userMsg = userMessage; // save current text
       setUserMessage('');
       setGeneratingResponse(true);
@@ -56,7 +161,7 @@ const Chat = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: userMsg,
-          chat_id: currentChatId
+          chat_id: chatId
         })
       });
 
@@ -83,7 +188,7 @@ const Chat = () => {
       }
       
       setGeneratingResponse(false);
-      setFullChatLog(prevLog => [...prevLog, {id: Date.now(), role: "assistant", content: fullResponseText}]);
+      setFullChatLog(prevLog => [...prevLog, {role: "assistant", content: fullResponseText}]);
       
     } catch (error) {
       console.error("Error fetching response.", error);
@@ -91,24 +196,49 @@ const Chat = () => {
   }
 
   return (
+
     <div className="flex h-screen bg-[#050509] text-slate-100">
       <div className="flex flex-1 justify-center">
         <div className="flex h-full w-full flex-col border-x border-slate-800 bg-[#050509]">
 
           <header className="flex items-center justify-between border-b border-slate-800 px-4 py-3">
-            <div className="flex items-center gap-2">
-              <div className="h-7 w-7 rounded-full bg-emerald-500/80" />
-              <div>
-                <h1 className="text-sm font-semibold">KGTutor</h1>
-                <p className="text-xs text-slate-400">
-                  Ask anything about SE450
-                </p>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <div className="h-7 w-7 rounded-full bg-emerald-500/80" />
+                <div>
+                  <h1 className="text-sm font-semibold">KGTutor</h1>
+                  <p className="text-xs text-slate-400">
+                    Ask anything about SE450
+                  </p>
+                </div>
               </div>
+              
+              {/* Chat Selection */}
+              {(
+                <select
+                  value={currentChat?.id?.toString() || 'new'}
+                  onChange={(e) => {
+                    if (e.target.value === 'new') {
+                      // Handle new chat creation
+                      const newChat: Chat = { id: undefined, title: 'New Chat' };
+                      setCurrentChat(newChat);
+                      setFullChatLog([]);
+                    } else {
+                      const selected = chats.find(c => c.id === Number(e.target.value));
+                      if (selected) setCurrentChat(selected);
+                    }
+                  }}
+                  className="rounded-lg border border-slate-700 bg-slate-800 px-3 py-1 text-xs text-slate-300 hover:bg-slate-700 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                >
+                  <option value="new">+ New Chat</option>
+                  {chats.map((chat, index) => (
+                    <option key={index} value={chat.id}>
+                      {chat.title}
+                    </option>
+                  ))}
+                </select>
+              )}
             </div>
-
-            <button className="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-300 hover:bg-slate-800">
-              New chat
-            </button>
           </header>
 
           <main ref={mainRef} className={`space-y-4 overflow-y-auto px-4 py-4 mx-80 ${fullChatLog.length > 0 ? "flex-1 pb-96" : "basis-1/3"}`}>
