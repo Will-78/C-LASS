@@ -1,7 +1,24 @@
 import hashlib
-from sqlalchemy import create_engine, Column, Integer, String
+from sqlalchemy import create_engine, Column, Integer, String, ForeignKey
 from sqlalchemy.orm import sessionmaker, declarative_base
 from contextlib import contextmanager
+from openai import OpenAI
+
+TITLE_PROMPT_TEMPLATE = """
+### INSTRUCTIONS:
+Act as a title generator.
+Summarize the following user query into a concise, descriptive title of 5 words or less. 
+Do not use punctuation, do not use quotes, and do not prefix the response with 'Title:'.
+Provide only the title text.
+
+---
+### QUESTION:
+{question}
+
+---
+### RESPONSE:
+"""
+
 
 # ------------------------------
 # Database tables
@@ -16,12 +33,18 @@ class User(Base):
     password = Column(String)  # hashed password
     role = Column(String, default="Student")  # Student or Teacher
 
+class Chat(Base):
+    __tablename__ = "chats"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), index=True)
+    title = Column(String, default="New Chat")
 
 class ChatMessage(Base):
     __tablename__ = "chat_messages"
 
     id = Column(Integer, primary_key=True, index=True)
-    chat_id = Column(Integer, index=True)
+    chat_id = Column(Integer, ForeignKey("chats.id"), index=True)
     role = Column(String, nullable=False)  # user or assistant
     content = Column(String, nullable=False)
 
@@ -43,6 +66,8 @@ class DBManager:
         )
 
         Base.metadata.create_all(bind=self.engine)
+
+        self.client = OpenAI()
 
     @contextmanager
     def session_scope(self):
@@ -115,18 +140,77 @@ class DBManager:
             db.add(message)
 
     # ------------------------------
-    # Retrieve chat history
+    # Retrieve some number of most recent chat history
+    # if num_chats is blank, get all chats
     # ------------------------------
-    def retrieve_history(self, chat_id: int):
+    def retrieve_history(self, chat_id: int, num_chats: int = None):
+        if num_chats and num_chats <= 0:
+            return []
+
         with self.session_scope() as db:
-            messages = (
+            query = (
                 db.query(ChatMessage)
                 .filter(ChatMessage.chat_id == chat_id)
-                .order_by(ChatMessage.id)
-                .all()
+                .order_by(ChatMessage.id.desc())
             )
+
+            if num_chats is not None:
+                query = query.limit(num_chats)
+
+            messages = query.all()
 
             return [
                 {"role": msg.role, "content": msg.content}
-                for msg in messages
+                for msg in reversed(messages)
             ]
+        
+    # ------------------------------
+    # Retrieve chats for a user (newest first)
+    # ------------------------------
+    def retrieve_chats(self, username: str):
+        with self.session_scope() as db:
+            existing_user = db.query(User).filter(User.username == username).first()
+            if not existing_user:
+                return []
+            user_id = existing_user.id
+
+            chats = (
+                db.query(Chat.id, Chat.title)
+                .filter(Chat.user_id == user_id)
+                .order_by(Chat.id.desc())
+                .all()
+            )
+
+            return [(chat_id, chat_title) for chat_id, chat_title in chats]
+
+    # ------------------------------
+    # Create a new chat
+    # ------------------------------
+    def create_chat(self, username: str, message: str):
+        try:
+            with self.session_scope() as db:
+                user = db.query(User).filter(User.username == username).first()
+                if not user:
+                    return None
+
+                title_response = self.client.chat.completions.create(
+                    model="gpt-4o",
+                    messages=[{"role": "user", "content": TITLE_PROMPT_TEMPLATE.format(
+                        question=message
+                    )}],
+                    temperature=0
+                )
+                chat_title = (title_response.choices[0].message.content or "New Chat").strip()
+
+                new_chat = Chat(
+                    user_id=user.id,
+                    title=chat_title
+                )
+                db.add(new_chat)
+                db.flush()
+                chat_id = new_chat.id
+                
+            return chat_id
+        except Exception as e:
+            print(f"Database error during chat creation: {e}")
+            return None

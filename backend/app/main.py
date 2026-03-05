@@ -34,15 +34,30 @@ tutor_manager = TutorManager(
 # -----------------------------
 # API datatypes
 # -----------------------------
+class Chat(BaseModel):
+    chat_id: int
+    title: str
+    
 class Message(BaseModel):
     message: str
     chat_id: Optional[int] = None  # optional for new sessions
+    role: Optional[str] = None # user or assistant
+
+class ChatHistoryRequest(BaseModel):
+    chat_id: int
+    num_chats: Optional[int] = None  # None to get all
+
+class CreateChatRequest(BaseModel):
+    username: str
+    message: str
+
+class GetChatsRequest(BaseModel):
+    username: str
 
 class AuthRequest(BaseModel):
     username: str
     password: str
     role: Optional[str] = None
-
 # -----------------------------
 # FastAPI app
 # -----------------------------
@@ -50,12 +65,31 @@ app = FastAPI()
 
 @app.post("/generate_response")
 def generate_response(request: Message):
-    # Generate a random chat_id if none provided
-    chat_id = request.chat_id if request.chat_id is not None else random.randint(1, 1_000_000)
+    if not request.chat_id:
+        raise HTTPException(status_code=404, detail="Invalid Chat ID")
+    
     return StreamingResponse(
-        tutor_manager.query(chat_id, request.message),
+        tutor_manager.query(request.chat_id, request.message),
         media_type="text/plain"
     )
+
+# TODO: Parameter should possibly be user id
+@app.post("/get-user-chats")
+def generate_response(request: GetChatsRequest):
+    chats = db_manager.retrieve_chats(request.username)
+    return [Chat(chat_id=chat_id, title=title) for chat_id, title in chats]
+
+@app.post("/get-chat-history")
+def get_chat_history(request: ChatHistoryRequest):
+    messages = db_manager.retrieve_history(request.chat_id, request.num_chats)
+    return messages
+
+@app.post("/create-chat")
+def create_chat(request: CreateChatRequest):
+    chat_id = db_manager.create_chat(request.username, request.message)
+    if chat_id is None:
+        raise HTTPException(status_code=400, detail="Failed to create chat")
+    return {"chat_id": chat_id}
 
 @app.post("/signup")
 def signup(auth_request: AuthRequest):

@@ -1,6 +1,5 @@
 from neo4j_graphrag.retrievers import HybridCypherRetriever
 from neo4j_graphrag.embeddings.openai import OpenAIEmbeddings
-from .kg import KnowledgeGraphManager
 from openai import AsyncOpenAI
 
 # ------------------------------
@@ -67,7 +66,7 @@ RETURN chunkText + '\n\nEntities: ' + apoc.text.join(entityNames, ', ') + '\n\nR
 # Tutor Manager
 # ------------------------------
 class TutorManager:
-    def __init__(self, kg_manager: KnowledgeGraphManager, db_manager, api_key):
+    def __init__(self, kg_manager , db_manager, api_key):
         embedder = OpenAIEmbeddings(model="text-embedding-ada-002")
         self.retriever = HybridCypherRetriever(
             kg_manager.driver,
@@ -114,14 +113,14 @@ class TutorManager:
     # MAIN QUERY FUNCTION
     # ------------------------------
     async def query(self, chat_id: int, query_text: str):
-        history = self.db_manager.retrieve_history(chat_id)
-
         rag_context = await self.context_search(chat_id, query_text)
 
         formatted_prompt = PROMPT_TEMPLATE.format(
             context=rag_context,
             question=query_text
         )
+
+        history = self.db_manager.retrieve_history(chat_id, 5)
 
         messages = history + [
             {"role": "user", "content": formatted_prompt}
