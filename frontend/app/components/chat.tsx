@@ -1,21 +1,36 @@
 'use client';
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import ReactMarkdown from 'react-markdown';
 
 interface Message {
   id?: number;
-  role: "user" | "ai";
+  role: "user" | "assistant";
   content: string;
 }
 
 const Chat = () => {
+  const mainRef = useRef<HTMLDivElement>(null);
   const [userMessage, setUserMessage] = useState('');
-  const [fullChatLog, setFullChatLog] = useState<Message[]>([{role: "ai", content: "How can I assist you?"}]);
+  const [fullChatLog, setFullChatLog] = useState<Message[]>([]);
   const [generatingResponse, setGeneratingResponse] = useState(false);
   const [streamedText, setStreamedText] = useState('');
 
   const inputPlaceholder = "Enter message...";
+
+  useEffect(() => {
+    if (mainRef.current && fullChatLog.length > 0 && fullChatLog[fullChatLog.length - 1].role === "user") {
+      setTimeout(() => {
+        if (mainRef.current) {
+          const userMessages = mainRef.current.querySelectorAll('[data-user-message]');
+          const latestUserMessage = userMessages[userMessages.length - 1] as HTMLElement;
+          if (latestUserMessage) {
+            latestUserMessage.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        }
+      }, 100);
+    }
+  }, [fullChatLog.length]);
 
   const streamResponse = async() => {
     try {
@@ -61,7 +76,7 @@ const Chat = () => {
       }
       
       setGeneratingResponse(false);
-      setFullChatLog(prevLog => [...prevLog, {id: Date.now(), role: "ai", content: ongoingText}]);
+      setFullChatLog(prevLog => [...prevLog, {id: Date.now(), role: "assistant", content: ongoingText}]);
       
     } catch (error) {
       console.error("Error fetching response.", error);
@@ -92,77 +107,67 @@ const Chat = () => {
 
           </header>
 
-          <main className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
-            {fullChatLog.map((message, idx) => 
-              <ChatMessage key={idx} message={message} />
-            )}
+          <main ref={mainRef} className={`space-y-4 overflow-y-auto px-4 py-4 mx-80 ${fullChatLog.length > 0 ? "flex-1 pb-96" : "basis-1/3"}`}>
+            {fullChatLog.map((message, idx) => (
+              <div
+                key={idx}
+                {...(message.role === "user" && { "data-user-message": true })}
+                className={
+                  message.role === "user"
+                    ? "max-h-64 w-fit max-w-md overflow-y-auto rounded-2xl bg-gray-700 p-4 text-sm leading-relaxed text-slate-100 ml-auto"
+                    : "prose max-w-none dark:prose-invert"
+                }
+              >
+                <ReactMarkdown>{message.content}</ReactMarkdown>
+              </div>
+            ))}
 
             {generatingResponse &&
-              <div className={`chat-message ai`}>
-                <span className="role">ai: </span>
-                <span className="content">
-                  <ReactMarkdown>
-                    {streamedText}
-                  </ReactMarkdown>
-                </span>
+              <div className="prose max-w-none dark:prose-invert">
+                <ReactMarkdown>
+                  {streamedText}
+                </ReactMarkdown>
               </div>
               }
           </main>
 
-          <footer className="border-t border-slate-800 px-4 py-3">
-            <div className="mx-auto">
-              <div className="rounded-2xl border border-slate-700 bg-[#0b0b12] px-3 py-2 shadow-lg">
+          <footer className="mx-80 px-4 py-3">
+            <div className="rounded-2xl bg-gray-700 p-4 text-slate-100 shadow-lg">
 
-                <textarea
-                  value={userMessage}
-                  onChange={(e) => setUserMessage(e.target.value)}
-                  placeholder={inputPlaceholder}
-                  className="w-full resize-none bg-transparent text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none"
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey && !generatingResponse) {
-                      e.preventDefault();
-                      if (userMessage.trim()) {
-                      streamResponse();
-                      }
+              <textarea
+                value={userMessage}
+                onChange={(e) => setUserMessage(e.target.value)}
+                placeholder={inputPlaceholder}
+                className="w-full resize-none bg-transparent text-sm text-slate-100 placeholder:text-slate-300 focus:outline-none"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey && !generatingResponse) {
+                    e.preventDefault();
+                    if (userMessage.trim()) {
+                    streamResponse();
                     }
-                  }}
-                />
+                  }
+                }}
+              />
 
-                <div className="mt-2 flex items-center justify-between text-[11px] text-slate-500">
-                  <span>Model: KGTutor 1.0</span>
-                  <button 
-                  className="inline-flex items-center gap-1 rounded-full bg-emerald-500 px-3 py-1 text-xs font-medium text-black hover:bg-emerald-400"
-                  onClick={streamResponse}
-                  disabled={!userMessage.trim() || generatingResponse}
-                  >
-                    <span>Send</span>
-                    <span>↵</span>
-                  </button>
-                </div>
-
+              <div className="mt-2 flex items-center justify-between text-[11px] text-slate-300">
+                <span>Model: GPT-4o</span>
+                <button 
+                className="inline-flex items-center gap-1 rounded-full bg-emerald-500 px-3 py-1 text-xs font-medium text-black hover:bg-emerald-400"
+                onClick={streamResponse}
+                disabled={!userMessage.trim() || generatingResponse}
+                >
+                  <span>Send</span>
+                  <span>↵</span>
+                </button>
               </div>
-              <p className="mt-2 text-[11px] text-slate-500">
-                KGTutor can make mistakes. Check with class materials
-              </p>
+
             </div>
+            <p className="mt-2 text-[11px] text-slate-500">
+              KGTutor can make mistakes. Check with class materials
+            </p>
           </footer>
         </div>
       </div>
-    </div>
-  );
-}
-
-function ChatMessage({ message }: { message: Message }) {
-  // leaving this for later bc this killed me
-  
-  return (
-    <div className={`chat-message ${message.role}`}>
-      <span className="role">{message.role}: </span>
-      <span className="content">
-        <ReactMarkdown>
-          {message.content}
-        </ReactMarkdown>
-        </span>
     </div>
   );
 }
