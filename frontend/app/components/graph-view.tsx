@@ -26,17 +26,17 @@ export default function GraphView() {
 
   // TODO: optimize label checks
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch('/api/get-graph-info');
-        const data = await response.json();
-        setGraphData(formatGraphResponse(data));
-      } catch (error) {
-        console.error('Error fetching graph data:', error);
-      }
-    };
+  const fetchData = async () => {
+    try {
+      const response = await fetch('/api/get-graph-info');
+      const data = await response.json();
+      setGraphData(formatGraphResponse(data));
+    } catch (error) {
+      console.error('Error fetching graph data:', error);
+    }
+  };
 
+  useEffect(() => {
     fetchData();
   }, []);
 
@@ -218,6 +218,10 @@ export default function GraphView() {
       {/* Document upload */}
       {documentUploadMenu &&
         <DocumentUpload
+          onFileUploadSuccess={() => {
+            fetchData();
+            setDocumentUploadMenu(false);
+          }}
           onCancel={() => {
             setDocumentUploadMenu(false);
           }}  

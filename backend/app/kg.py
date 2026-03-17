@@ -133,6 +133,7 @@ class KnowledgeGraphManager:
             OPTIONS { indexConfig: { `vector.dimensions`: 1536, `vector.similarity_function`: 'cosine' } }
         """)
 
+        # Create Full Text Index
         self.query("""
             CREATE FULLTEXT INDEX text_fulltext IF NOT EXISTS
             FOR (n:Chunk) ON EACH [n.text]

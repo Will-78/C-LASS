@@ -5,12 +5,14 @@ import { useDropzone } from "react-dropzone";
 import axios from "axios";
 
 type DocumentUploadProps = {
+  onFileUploadSuccess: () => void
   onCancel: () => void
 };
 
 type PreviewFile = File & { preview: string };
 
 export default function DocumentUpload({
+  onFileUploadSuccess,
   onCancel
 }: DocumentUploadProps) {
   const [files, setFiles] = useState<PreviewFile[]>([]);
@@ -48,6 +50,8 @@ export default function DocumentUpload({
       await axios.post("/api/document-kg-builder", formData);
       setStatus("Success! Files uploaded.");
       clearFiles();
+      onFileUploadSuccess();
+
     } catch (error) {
       setStatus("Error uploading files.");
     }
