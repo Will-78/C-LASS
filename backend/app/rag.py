@@ -1,9 +1,10 @@
 from neo4j_graphrag.retrievers import HybridCypherRetriever
 from neo4j_graphrag.embeddings.openai import OpenAIEmbeddings
-from .kg import KnowledgeGraphManager
 from openai import AsyncOpenAI
 
-# Define prompts
+# ------------------------------
+# REPHRASER PROMPT
+# ------------------------------
 REPHRASER_PROMPT_TEMPLATE = """
 Given the following CHAT HISTORY and a FOLLOW-UP QUESTION, 
 rephrase the FOLLOW-UP QUESTION to be a STANDALONE QUERY. 
@@ -23,129 +24,121 @@ FOLLOW-UP QUESTION:
 STANDALONE QUERY:
 """
 
-PROMPT_TEMPLATE="""
+# ------------------------------
+# MAIN PROMPT
+# ------------------------------
+PROMPT_TEMPLATE = """
 ### INSTRUCTIONS:
 You are a **helpful tutor**. 
-* **Guide the User:** Give hints to help guide the user to the answer to the **QUESTION** using the **CONTEXT** below.
-* **Scaffold Learning:** Answer questions that the user has, but **do not outright give the answer** if the **QUESTION** is asking for the solution to a problem.
-* **Stay Grounded:** Keep your **RESPONSE** grounded in the facts of the **CONTEXT**.
-* **Contextual Awareness:** Always check the conversation history to understand pronouns (like 'he', 'it', 'previous') and use the provided context to answer specific facts.
+* Guide the User.
+* Do NOT give the direct answer.
+* Stay grounded in the CONTEXT.
+* Use conversation history for pronoun resolution.
+
 ---
 ### CONTEXT:
 {context}
+
 ---
 ### QUESTION:
 {question}
+
 ---
 ### RESPONSE:
 """
 
-RETRIEVAL_QUERY="""
-// Start with the matched chunk from vector search
+RETRIEVAL_QUERY = """
 WITH node AS chunk
-
-// Get entities from this chunk
 OPTIONAL MATCH (chunk)<-[:FROM_CHUNK]-(entity)
-
-// Get relationships between entities (1-2 hops)
 OPTIONAL MATCH (entity)-[rel:!FROM_CHUNK]-(neighbor)
 WHERE neighbor:__Entity__
-
-// Collect unique chunks, entities, and relationships
 WITH chunk, 
         collect(DISTINCT entity) AS entities,
         collect(DISTINCT rel) AS rels,
         collect(DISTINCT neighbor) AS neighbors
-
-// Format the context string
 WITH chunk.text AS chunkText,
         [e IN entities | e.name] AS entityNames,
         [r IN rels | startNode(r).name + ' - ' + type(r) + ' -> ' + endNode(r).name] AS relStrings
-
-// Combine into one context string
 RETURN chunkText + '\n\nEntities: ' + apoc.text.join(entityNames, ', ') + '\n\nRelationships:\n' + apoc.text.join(relStrings, '\n') AS info
 """
 
 # ------------------------------
-# LLM + GraphRAG Tutor manager
+# Tutor Manager
 # ------------------------------
-class TutorManager():
-    def __init__(self, kg_manager: KnowledgeGraphManager, api_key):
-        # initialize retriever
+class TutorManager:
+    def __init__(self, kg_manager , db_manager, api_key):
         embedder = OpenAIEmbeddings(model="text-embedding-ada-002")
         self.retriever = HybridCypherRetriever(
             kg_manager.driver,
             vector_index_name="text_embeddings",
-            fulltext_index_name ="text_fulltext",
+            fulltext_index_name="text_fulltext",
             embedder=embedder,
             retrieval_query=RETRIEVAL_QUERY
         )
-
-        # initialize LLM
         self.client = AsyncOpenAI(api_key=api_key)
+        self.db_manager = db_manager
 
-        # initialize history
-        self.history = []
-    
-    # GraphRAG context search
-    async def context_search(self, query_text):
-        # Format the last 5 chats in history for rephrasing
-        formatted_history = ""
-        for msg in self.history[-5:]:
-            formatted_history += f"{msg['role'].upper()}: {msg['content']}\n"
-        
-        # Format the prompt
+    # ------------------------------
+    # Context search with DB history
+    # ------------------------------
+    async def context_search(self, chat_id: int, query_text: str):
+        history = self.db_manager.retrieve_history(chat_id)
+
+        formatted_history = "".join(f"{msg['role'].upper()}: {msg['content']}\n" for msg in history[-5:])
+
         formatted_prompt = REPHRASER_PROMPT_TEMPLATE.format(
-            chat_history=formatted_history, 
+            chat_history=formatted_history,
             question=query_text
         )
 
-        # Rephrase history and question for search
         response = await self.client.chat.completions.create(
             model="gpt-4o",
             messages=[{"role": "user", "content": formatted_prompt}],
             temperature=0
         )
 
-        # GraphRAG using rephrased query
+        standalone_query = response.choices[0].message.content
+
         retriever_results = self.retriever.search(
-            query_text=response.choices[0].message.content, 
+            query_text=standalone_query,
             top_k=5
         )
-        
-        # Extract content from result items
-        if hasattr(retriever_results, 'items'):
-            rag_context = "\n\n".join([item.content for item in retriever_results.items])
-        else:
-            rag_context = str(retriever_results)
-    
-        return rag_context
-    
-    # Query the LLM, streamed response generation
-    async def query(self, query_text):
-        # Retrieve context
-        rag_context = await self.context_search(query_text)
 
-        # Format the prompt
+        if hasattr(retriever_results, "items"):
+            return "\n\n".join([item.content for item in retriever_results.items])
+
+        return str(retriever_results)
+
+    # ------------------------------
+    # MAIN QUERY FUNCTION
+    # ------------------------------
+    async def query(self, chat_id: int, query_text: str):
+        rag_context = await self.context_search(chat_id, query_text)
+
         formatted_prompt = PROMPT_TEMPLATE.format(
             context=rag_context,
             question=query_text
         )
 
-        # Stream response generation
+        history = self.db_manager.retrieve_history(chat_id, 5)
+
+        messages = history + [
+            {"role": "user", "content": formatted_prompt}
+        ]
+
         full_response = ""
+
         stream = await self.client.chat.completions.create(
-            model="gpt-4o", 
-            messages=self.history + [{"role": "user", "content": formatted_prompt}], 
+            model="gpt-4o",
+            messages=messages,
             stream=True
         )
-        
+
         async for chunk in stream:
             content = chunk.choices[0].delta.content or ""
             yield content
             full_response += content
 
-        # Add user message to history
-        self.history.append({"role": "user", "content": query_text})
-        # Add response to history
-        self.history.append({"role": "assistant", "content": full_response})
+        # Log messages in DB
+        self.db_manager.log_message("user", query_text, chat_id)
+        self.db_manager.log_message("assistant", full_response, chat_id)
