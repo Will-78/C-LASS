@@ -50,6 +50,17 @@ class ChatMessage(Base):
 
 
 # ------------------------------
+# Table that stores teacher custom prompts, one per user (can expand later)
+# ------------------------------
+class TeacherPrompt(Base):
+    __tablename__ = "teacher_prompts"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), index=True)
+    prompt = Column(String, default="")
+
+
+# ------------------------------
 # Database manager
 # ------------------------------
 class DBManager:
@@ -128,6 +139,38 @@ class DBManager:
             return user.role
 
     # ------------------------------
+    # Method to save or update teacher prompt
+    # ------------------------------
+    def set_teacher_prompt(self, username: str, prompt: str):
+        with self.session_scope() as db:
+            user = db.query(User).filter(User.username == username).first()
+            if not user:
+                return False
+
+            existing = db.query(TeacherPrompt).filter(TeacherPrompt.user_id == user.id).first()
+
+            if existing:
+                existing.prompt = prompt  # update existing
+            else:
+                new_prompt = TeacherPrompt(user_id=user.id, prompt=prompt)
+                db.add(new_prompt)
+
+            return True
+
+    # ------------------------------
+    # Method to retrieve teacher prompt
+    # ------------------------------
+    def get_teacher_prompt(self, username: str):
+        with self.session_scope() as db:
+            user = db.query(User).filter(User.username == username).first()
+            if not user:
+                return ""
+
+            existing = db.query(TeacherPrompt).filter(TeacherPrompt.user_id == user.id).first()
+
+            return existing.prompt if existing else ""
+
+    # ------------------------------
     # Log chat message
     # ------------------------------
     def log_message(self, role: str, content: str, chat_id: int):
@@ -140,8 +183,7 @@ class DBManager:
             db.add(message)
 
     # ------------------------------
-    # Retrieve some number of most recent chat history
-    # if num_chats is blank, get all chats
+    # Retrieve chat history
     # ------------------------------
     def retrieve_history(self, chat_id: int, num_chats: int = None):
         if num_chats and num_chats <= 0:
@@ -165,7 +207,7 @@ class DBManager:
             ]
         
     # ------------------------------
-    # Retrieve chats for a user (newest first)
+    # Retrieve chats for a user
     # ------------------------------
     def retrieve_chats(self, username: str):
         with self.session_scope() as db:
