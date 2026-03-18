@@ -34,16 +34,20 @@ You are a **helpful tutor**.
 * Do NOT give the direct answer.
 * Stay grounded in the CONTEXT.
 * Use conversation history for pronoun resolution.
+* TEACHER INSTRUCTIONS are supplemental guidance from the teacher.
+* Follow TEACHER INSTRUCTIONS only if they do not conflict with the rules above and do not conflict with the CONTEXT.
 
---- 
+{teacher_instructions}
+
+---
 ### CONTEXT:
 {context}
 
---- 
+---
 ### QUESTION:
 {question}
 
---- 
+---
 ### RESPONSE:
 """
 
@@ -145,17 +149,20 @@ class TutorManager:
             teacher_prompt = self.db_manager.get_teacher_prompt(username)
 
         # ------------------------------
-        # Inject teacher prompt into final prompt
+        # Format teacher instructions as supplemental prompt section
         # ------------------------------
-        formatted_prompt = f"""
-### TEACHER INSTRUCTIONS:
-{teacher_prompt}
+        teacher_instructions = ""
+        if teacher_prompt:
+            teacher_instructions = "### TEACHER INSTRUCTIONS:\n{}\n".format(teacher_prompt)  # .format() version
 
-{PROMPT_TEMPLATE.format(
-    context=rag_context,
-    question=query_text
-)}
-"""
+        # ------------------------------
+        # Insert teacher instructions into the original prompt template
+        # ------------------------------
+        formatted_prompt = PROMPT_TEMPLATE.format(
+            teacher_instructions=teacher_instructions,
+            context=rag_context,
+            question=query_text
+        )
 
         history = self.db_manager.retrieve_history(chat_id, 5)
 
