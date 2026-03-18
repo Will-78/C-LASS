@@ -22,8 +22,10 @@ export default function GraphView() {
   const [EntitiesToDelete, setEntitiesToDelete] = useState<Set<any>>(new Set());
   const [isSaving, setIsSaving] = useState(false);
 
-  // Teacher prompt state now here
+  // Teacher prompt state
   const [teacherPrompt, setTeacherPrompt] = useState("");
+  const [teacherPromptChanged, setTeacherPromptChanged] = useState(false);
+  const [promptSaveMessage, setPromptSaveMessage] = useState("");
 
   // Load initial graph and teacher prompt
   useEffect(() => {
@@ -33,7 +35,6 @@ export default function GraphView() {
         const data = await response.json();
         setGraphData(formatGraphResponse(data));
 
-        // Fetch teacher prompt
         const username = localStorage.getItem("username");
         if (username) {
           const res = await fetch("/api/get-teacher-prompt", {
@@ -44,12 +45,10 @@ export default function GraphView() {
           const dataPrompt = await res.json();
           setTeacherPrompt(dataPrompt.prompt || "");
         }
-
       } catch (error) {
         console.error('Error fetching graph data or teacher prompt:', error);
       }
     };
-
     fetchData();
   }, []);
 
@@ -63,28 +62,35 @@ export default function GraphView() {
   const saveChanges = async () => {
     setIsSaving(true);
     try {
-      const reformattedGraphData = buildSavePayload(graphData, EntitiesToDelete);
-      const response = await fetch('/api/save-graph-info', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(reformattedGraphData)
-      });
-      if (!response.ok) throw new Error('Failed to save graph changes');
-
-      // Save teacher prompt
-      const username = localStorage.getItem("username");
-      if (username) {
-        await fetch("/api/set-teacher-prompt", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ username, prompt: teacherPrompt })
+      // Save graph changes
+      if (changesMade) {
+        const reformattedGraphData = buildSavePayload(graphData, EntitiesToDelete);
+        const response = await fetch('/api/save-graph-info', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(reformattedGraphData)
         });
+        if (!response.ok) throw new Error('Failed to save graph changes');
+        setEntitiesToDelete(new Set());
+        setChangesMade(false);
       }
 
-      alert('Graph changes saved successfully!');
-      setEntitiesToDelete(new Set());
+      // Save teacher prompt
+      if (teacherPromptChanged) {
+        const username = localStorage.getItem("username");
+        if (username) {
+          await fetch("/api/set-teacher-prompt", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username, prompt: teacherPrompt })
+          });
+          setPromptSaveMessage("Saved successfully!");
+          setTimeout(() => setPromptSaveMessage(""), 3000); // Hide after 3 sec
+          setTeacherPromptChanged(false);
+        }
+      }
     } catch (error) {
-      console.error('Error saving graph changes:', error);
+      console.error('Error saving graph changes or teacher prompt:', error);
     } finally {
       setIsSaving(false);
     }
@@ -203,19 +209,22 @@ export default function GraphView() {
           className="w-full p-2 rounded bg-gray-700 text-white"
           placeholder="Enter custom instructions..."
           value={teacherPrompt}
-          onChange={(e) => setTeacherPrompt(e.target.value)}
+          onChange={(e) => { setTeacherPrompt(e.target.value); setTeacherPromptChanged(true); }}
         />
+        {promptSaveMessage && (
+          <div className="text-green-400 text-sm mt-1">{promptSaveMessage}</div>
+        )}
       </div>
 
       <button 
         className="absolute bottom-4 left-4 rounded-lg shadow px-4 py-2 border transition-colors z-[9999] disabled:opacity-50 disabled:cursor-not-allowed"
         style={{
-          backgroundColor: changesMade ? 'white' : '#f3f4f6',
-          color: changesMade ? '#0f172a' : '#9ca3af',
-          borderColor: changesMade ? '#e2e8f0' : '#d1d5db'
+          backgroundColor: changesMade || teacherPromptChanged ? 'white' : '#f3f4f6',
+          color: changesMade || teacherPromptChanged ? '#0f172a' : '#9ca3af',
+          borderColor: changesMade || teacherPromptChanged ? '#e2e8f0' : '#d1d5db'
         }}
-        disabled={!changesMade || isSaving}
-        onClick={() => { setSelectedEntity(null); setMenuData(null); saveChanges(); setChangesMade(false); }}
+        disabled={!(changesMade || teacherPromptChanged) || isSaving}
+        onClick={() => { setSelectedEntity(null); setMenuData(null); saveChanges(); }}
       >
         {isSaving ? 'Saving…' : 'Save Changes'}
       </button>
