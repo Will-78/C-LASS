@@ -1,6 +1,7 @@
-from neo4j_graphrag.retrievers import HybridCypherRetriever
+from neo4j_graphrag.retrievers import HybridCypherRetriever 
 from neo4j_graphrag.embeddings.openai import OpenAIEmbeddings
 from openai import AsyncOpenAI
+from .db import Chat, User  # moved here instead of inside the get_username_from_chat function
 
 # ------------------------------
 # REPHRASER PROMPT
@@ -87,8 +88,6 @@ class TutorManager:
     # ------------------------------
     def get_username_from_chat(self, chat_id: int):
         with self.db_manager.session_scope() as db:
-            from .db import Chat, User
-
             chat = db.query(Chat).filter(Chat.id == chat_id).first()
             if not chat:
                 return None
