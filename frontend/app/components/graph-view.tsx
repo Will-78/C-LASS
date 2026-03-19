@@ -81,13 +81,13 @@ export default function GraphView() {
     if (!menuData) return;
     const timestamp = Date.now();
     const newNode = {
-      id: `node-${timestamp}`,
+      id: `__Entity__:New Entity`,
       caption: 'New Entity',
       size: 20,
       color: '#10b981',
       type: 'Entity',
       desc: '',
-      entryId: `node-${timestamp}`
+      entryId: `__Entity__:New Entity`
     };
 
     setGraphData(prev => ({
@@ -173,10 +173,24 @@ export default function GraphView() {
             setEntitiesToDelete(prev => new Set(prev).add(entryId));
           }}
           onSave={(updatedEntity) => {
-            
+            const updatedCaption = String((updatedEntity as any).caption ?? '').trim();
+            const updatedNodeId = updatedCaption ? `__Entity__:${updatedCaption}` : updatedEntity.id;
+
+            if( updatedCaption )
+              setEntitiesToDelete(prev => new Set(prev).add(['node', updatedEntity.entryId.toString()]));
+
             setGraphData(prevData => ({
               ...prevData,
-              nodes: prevData.nodes.map(n => n.id === updatedEntity.id ? { ...n, ...updatedEntity } : n)
+              nodes: prevData.nodes.map(n =>
+                n.id === updatedEntity.id
+                  ? { ...n, ...updatedEntity, id: updatedNodeId, entryId: updatedNodeId }
+                  : n
+              ),
+              rels: prevData.rels.map(r => ({
+                ...r,
+                from: r.from === updatedEntity.id ? updatedNodeId : r.from,
+                to: r.to === updatedEntity.id ? updatedNodeId : r.to,
+              })),
             }));
 
             setSelectedEntity(null);
