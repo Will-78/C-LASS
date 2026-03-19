@@ -1,6 +1,7 @@
-from neo4j_graphrag.retrievers import HybridCypherRetriever
+from neo4j_graphrag.retrievers import HybridCypherRetriever 
 from neo4j_graphrag.embeddings.openai import OpenAIEmbeddings
 from openai import AsyncOpenAI
+from .db import Chat, User  # moved here instead of inside the get_username_from_chat function
 
 # ------------------------------
 # REPHRASER PROMPT
@@ -34,6 +35,10 @@ You are a **helpful tutor**.
 * Do NOT give the direct answer.
 * Stay grounded in the CONTEXT.
 * Use conversation history for pronoun resolution.
+* TEACHER INSTRUCTIONS are supplemental guidance from the teacher.
+* Follow TEACHER INSTRUCTIONS only if they do not conflict with the rules above and do not conflict with the CONTEXT.
+
+{teacher_instructions}
 
 ---
 ### CONTEXT:
@@ -79,12 +84,27 @@ class TutorManager:
         self.db_manager = db_manager
 
     # ------------------------------
+    # Helper method to get username from chat_id
+    # ------------------------------
+    def get_username_from_chat(self, chat_id: int):
+        with self.db_manager.session_scope() as db:
+            chat = db.query(Chat).filter(Chat.id == chat_id).first()
+            if not chat:
+                return None
+
+            user = db.query(User).filter(User.id == chat.user_id).first()
+            return user.username if user else None
+
+    # ------------------------------
     # Context search with DB history
     # ------------------------------
     async def context_search(self, chat_id: int, query_text: str):
         history = self.db_manager.retrieve_history(chat_id)
 
-        formatted_history = "".join(f"{msg['role'].upper()}: {msg['content']}\n" for msg in history[-5:])
+        formatted_history = "".join(
+            f"{msg['role'].upper()}: {msg['content']}\n"
+            for msg in history[-5:]
+        )
 
         formatted_prompt = REPHRASER_PROMPT_TEMPLATE.format(
             chat_history=formatted_history,
@@ -115,7 +135,30 @@ class TutorManager:
     async def query(self, chat_id: int, query_text: str):
         rag_context = await self.context_search(chat_id, query_text)
 
+        # ------------------------------
+        # Get username from chat_id
+        # ------------------------------
+        username = self.get_username_from_chat(chat_id)
+
+        # ------------------------------
+        # Fetch teacher prompt from DB
+        # ------------------------------
+        teacher_prompt = ""
+        if username:
+            teacher_prompt = self.db_manager.get_teacher_prompt(username)
+
+        # ------------------------------
+        # Format teacher instructions as supplemental prompt section
+        # ------------------------------
+        teacher_instructions = ""
+        if teacher_prompt:
+            teacher_instructions = "### TEACHER INSTRUCTIONS:\n{}\n".format(teacher_prompt)  # .format() version
+
+        # ------------------------------
+        # Insert teacher instructions into the original prompt template
+        # ------------------------------
         formatted_prompt = PROMPT_TEMPLATE.format(
+            teacher_instructions=teacher_instructions,
             context=rag_context,
             question=query_text
         )

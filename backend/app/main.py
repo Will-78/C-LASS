@@ -42,12 +42,12 @@ class Chat(BaseModel):
     
 class Message(BaseModel):
     message: str
-    chat_id: Optional[int] = None  # optional for new sessions
-    role: Optional[str] = None # user or assistant
+    chat_id: Optional[int] = None
+    role: Optional[str] = None
 
 class ChatHistoryRequest(BaseModel):
     chat_id: int
-    num_chats: Optional[int] = None  # None to get all
+    num_chats: Optional[int] = None
 
 class CreateChatRequest(BaseModel):
     username: str
@@ -60,10 +60,27 @@ class AuthRequest(BaseModel):
     username: str
     password: str
     role: Optional[str] = None
+
+
+# -----------------------------
+# Request model to save teacher prompt
+# -----------------------------
+class TeacherPromptRequest(BaseModel):
+    username: str
+    prompt: str
+
+# -----------------------------
+# Request model to get teacher prompt
+# -----------------------------
+class GetTeacherPromptRequest(BaseModel):
+    username: str
+
+
 # -----------------------------
 # FastAPI app
 # -----------------------------
 app = FastAPI()
+
 
 @app.post("/generate_response")
 def generate_response(request: Message):
@@ -75,16 +92,19 @@ def generate_response(request: Message):
         media_type="text/plain"
     )
 
+
 # TODO: Parameter should possibly be user id
 @app.post("/get-user-chats")
 def generate_response(request: GetChatsRequest):
     chats = db_manager.retrieve_chats(request.username)
     return [Chat(chat_id=chat_id, title=title) for chat_id, title in chats]
 
+
 @app.post("/get-chat-history")
 def get_chat_history(request: ChatHistoryRequest):
     messages = db_manager.retrieve_history(request.chat_id, request.num_chats)
     return messages
+
 
 @app.post("/create-chat")
 def create_chat(request: CreateChatRequest):
@@ -92,6 +112,7 @@ def create_chat(request: CreateChatRequest):
     if chat_id is None:
         raise HTTPException(status_code=400, detail="Failed to create chat")
     return {"chat_id": chat_id}
+
 
 @app.post("/signup")
 def signup(auth_request: AuthRequest):
@@ -111,6 +132,7 @@ def signup(auth_request: AuthRequest):
         "role": role
     }
 
+
 @app.post("/signin")
 def signin(auth_request: AuthRequest):
     role = db_manager.user_signin(
@@ -126,9 +148,33 @@ def signin(auth_request: AuthRequest):
         "role": role
     }
 
+
+# -----------------------------
+# Endpoint to save/update teacher prompt
+# -----------------------------
+@app.post("/set-teacher-prompt")
+def set_teacher_prompt(request: TeacherPromptRequest):
+    success = db_manager.set_teacher_prompt(request.username, request.prompt)
+
+    if not success:
+        raise HTTPException(status_code=400, detail="Failed to save prompt")
+
+    return {"message": "Prompt saved"}
+
+
+# -----------------------------
+# Endpoint to retrieve teacher prompt
+# -----------------------------
+@app.post("/get-teacher-prompt")
+def get_teacher_prompt(request: GetTeacherPromptRequest):
+    prompt = db_manager.get_teacher_prompt(request.username)
+    return {"prompt": prompt}
+
+
 @app.get("/get-graph-info")
 def get_graph_info():
     return kg_manager.get_full_graph()
+
 
 @app.post("/save-graph-info")
 def save_graph_info(graph_data: dict):
