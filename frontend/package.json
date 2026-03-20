@@ -11,13 +11,15 @@
   "dependencies": {
     "@neo4j-nvl/base": "1.0.0",
     "@neo4j-nvl/react": "^1.0.0",
-    "@tailwindcss/cli": "^4.1.17",
+    "axios": "1.13.5",
     "next": "^16.0.8",
     "react": "19.2.0",
     "react-dom": "19.2.0",
+    "react-dropzone": "15.0.0",
     "react-markdown": "10.1.0"
   },
   "devDependencies": {
+    "@tailwindcss/cli": "^4.1.17",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19.2.10",

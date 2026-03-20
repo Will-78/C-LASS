@@ -3,7 +3,7 @@
 import "./globals.css";
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import UserIcon from "./components/UserIcon";
+import UserIcon from "./components/user-icon";
 import { execSync } from "node:child_process";
 import { exportTraceState } from "next/dist/trace";
 

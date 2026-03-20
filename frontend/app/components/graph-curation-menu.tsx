@@ -5,7 +5,7 @@ import { GraphMenuPosition } from './graph-types';
 type GraphCurationMenuProps = {
   position: GraphMenuPosition;
   onAddNode: () => void;
-  onAddRelationship: () => void;
+  onAddRelationship: () => void
 };
 
 export default function GraphCurationMenu({

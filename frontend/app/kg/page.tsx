@@ -1,10 +1,9 @@
 // app/chat/page.tsx
-import GraphBridge from '../components/graphbridge';
+import GraphBridge from '../components/graph-bridge';
 
 export default function GraphPage() {
   return (
     <main>
-      <h1>Knowledge Graph</h1>
       <GraphBridge />
     </main>
   );

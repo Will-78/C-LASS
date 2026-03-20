@@ -1,7 +1,9 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from typing import Optional
+from typing import List
+import shutil
 import os
 import random
 
@@ -171,7 +173,6 @@ def get_teacher_prompt(request: GetTeacherPromptRequest):
 
 @app.get("/get-graph-info")
 def get_graph_info():
-    kg_manager.backfill_entity_ids()
     return kg_manager.get_full_graph()
 
 
@@ -208,3 +209,26 @@ def save_graph_info(graph_data: dict):
         raise HTTPException(status_code=500, detail=str(e))
 
     return {"message": "Graph information saved successfully"}
+
+@app.post("/document-kg-builder")
+async def document_kg_builder(files: List[UploadFile] = File(...)):
+    upload_dir = "/tmp/uploads"
+    os.makedirs(upload_dir, exist_ok=True)
+    
+    try:
+        for file in files:
+            # Save uploaded file to temporary directory
+            file_path = os.path.join(upload_dir, file.filename)
+            with open(file_path, "wb") as buffer:
+                shutil.copyfileobj(file.file, buffer)
+            
+            # Run document kg builder
+            await kg_manager.document_kg_builder(file_path)
+            
+            # Clean up after processing
+            os.remove(file_path)
+    except Exception as e:
+        print(f"Error from document upload: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+    return {"message": f"Successfuly uploaded files"}

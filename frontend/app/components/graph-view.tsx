@@ -11,6 +11,7 @@ import {
   RelationshipDraft,
 } from './graph-types';
 import { buildSavePayload, formatGraphResponse, normalizeRelCaption } from './graph-utils';
+import DocumentUpload from './document-upload'
 
 export default function GraphView() {
   const [graphData, setGraphData] = useState<GraphData>({ nodes: [], rels: [] });
@@ -21,6 +22,7 @@ export default function GraphView() {
   const [changesMade, setChangesMade] = useState(false);
   const [EntitiesToDelete, setEntitiesToDelete] = useState<Set<any>>(new Set());
   const [isSaving, setIsSaving] = useState(false);
+  const [documentUploadMenu, setDocumentUploadMenu] = useState(false);
 
   // Teacher prompt state
   const [teacherPrompt, setTeacherPrompt] = useState("");
@@ -28,27 +30,28 @@ export default function GraphView() {
   const [promptSaveMessage, setPromptSaveMessage] = useState("");
 
   // Load initial graph and teacher prompt
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch('/api/get-graph-info');
-        const data = await response.json();
-        setGraphData(formatGraphResponse(data));
+  const fetchData = async () => {
+    try {
+      const response = await fetch('/api/get-graph-info');
+      const data = await response.json();
+      setGraphData(formatGraphResponse(data));
 
-        const username = localStorage.getItem("username");
-        if (username) {
-          const res = await fetch("/api/get-teacher-prompt", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ username })
-          });
-          const dataPrompt = await res.json();
-          setTeacherPrompt(dataPrompt.prompt || "");
-        }
-      } catch (error) {
-        console.error('Error fetching graph data or teacher prompt:', error);
+      const username = localStorage.getItem("username");
+      if (username) {
+        const res = await fetch("/api/get-teacher-prompt", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username })
+        });
+        const dataPrompt = await res.json();
+        setTeacherPrompt(dataPrompt.prompt || "");
       }
-    };
+    } catch (error) {
+      console.error('Error fetching graph data or teacher prompt:', error);
+    }
+  };
+  
+  useEffect(() => {
     fetchData();
   }, []);
 
@@ -100,13 +103,13 @@ export default function GraphView() {
     if (!menuData) return;
     const timestamp = Date.now();
     const newNode = {
-      id: `node-${timestamp}`,
+      id: `__Entity__:New Entity`,
       caption: 'New Entity',
       size: 20,
       color: '#10b981',
       type: 'Entity',
       desc: '',
-      entryId: `node-${timestamp}`
+      entryId: `__Entity__:New Entity`
     };
     setGraphData(prev => ({ ...prev, nodes: [...prev.nodes, newNode] }));
     setChangesMade(true);
@@ -162,9 +165,24 @@ export default function GraphView() {
             setEntitiesToDelete(prev => new Set(prev).add(entryId));
           }}
           onSave={(updatedEntity) => {
-            setGraphData(prev => ({
-              ...prev,
-              nodes: prev.nodes.map(n => n.id === updatedEntity.id ? { ...n, ...updatedEntity } : n)
+            const updatedCaption = String((updatedEntity as any).caption ?? '').trim();
+            const updatedNodeId = updatedCaption ? `__Entity__:${updatedCaption}` : updatedEntity.id;
+
+            if( updatedCaption )
+              setEntitiesToDelete(prev => new Set(prev).add(['node', updatedEntity.entryId.toString()]));
+
+            setGraphData(prevData => ({
+              ...prevData,
+              nodes: prevData.nodes.map(n =>
+                n.id === updatedEntity.id
+                  ? { ...n, ...updatedEntity, id: updatedNodeId, entryId: updatedNodeId }
+                  : n
+              ),
+              rels: prevData.rels.map(r => ({
+                ...r,
+                from: r.from === updatedEntity.id ? updatedNodeId : r.from,
+                to: r.to === updatedEntity.id ? updatedNodeId : r.to,
+              })),
             }));
             setSelectedEntity(null);
             setChangesMade(true);
@@ -181,9 +199,31 @@ export default function GraphView() {
         />
       )}
 
+      {/* Graph curation menu toggle when clicking off */}
       {menuData && <div className="fixed inset-0 z-10" onClick={() => setMenuData(null)} />}
-      {menuData && <GraphCurationMenu position={menuData} onAddNode={createNewNode} onAddRelationship={createNewRelationship} />}
+        {/* Graph curation menu */}
+      {menuData && (
+        <GraphCurationMenu
+          position={menuData}
+          onAddNode={createNewNode}
+          onAddRelationship={createNewRelationship}
+        />
+      )}
 
+      {/* Document upload */}
+      {documentUploadMenu &&
+        <DocumentUpload
+          onFileUploadSuccess={() => {
+            fetchData();
+            setDocumentUploadMenu(false);
+          }}
+          onCancel={() => {
+            setDocumentUploadMenu(false);
+          }}  
+        />
+      }
+
+      {/* Neo4j nvl wrapper */}
       <div className="absolute inset-0 box-border">
         <InteractiveNvlWrapper 
           nodes={graphData.nodes} 
@@ -234,6 +274,18 @@ export default function GraphView() {
           Saving changes…
         </div>
       )}
+
+      {/* Document upload button */}
+      <button 
+        className={"absolute bottom-4 right-4 rounded-lg shadow px-4 py-2 border transition-colors z-[9999] disabled:opacity-50 disabled:cursor-not-allowed bg-white text-slate-900 border-slate-200 hover:bg-slate-100"}
+        disabled={documentUploadMenu}
+        onClick={() => {
+          setMenuData(null);
+          setDocumentUploadMenu(true);
+        }}
+      >
+        Document KG Builder
+      </button>
     </div>
   );
 }

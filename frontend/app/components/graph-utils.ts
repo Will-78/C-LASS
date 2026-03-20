@@ -26,9 +26,7 @@ const isDocument = (labels: string[]) => labels.includes('Document');
 const isChunk = (labels: string[]) => labels.includes('Chunk');
 
 const getNodeCaption = (node: ApiNode) => {
-  if (isDocument(node.labels)) return 'Document';
-  if (isChunk(node.labels)) return 'Chunk';
-  return node.properties.name || 'Entity';
+  return node.properties.name || 'Unamed Entity';
 };
 
 const getNodeColor = (node: ApiNode) => {
@@ -76,23 +74,23 @@ export const normalizeRelCaption = (caption: string) =>
 export const buildSavePayload = (graphData: GraphData, entitiesToDelete: Set<any>) => {
   const nodes = graphData.nodes
     .filter((node) => node.entryId)
-    .map((node) => ({
-      id: node.entryId,
-      labels:
-        node.type === 'Document'
-          ? ['Document']
-          : node.type === 'Chunk'
-            ? ['Chunk']
-            : node.type
-              ? ['Entity', node.type]
-              : ['Entity'],
-      properties:
+    .map((node) => {
+      const baseLabels = ['__KGBuilder__', '__Entity__', 'Entity'];
+      const labels = node.type ? [...baseLabels, node.type] : baseLabels;
+      
+      const properties =
         node.type === 'Document'
           ? { document_type: node.type, path: node.desc }
           : node.type === 'Chunk'
             ? { text: node.desc }
-            : { name: node.caption },
-    }));
+            : { name: node.caption };
+
+      return {
+        id: node.entryId,
+        labels,
+        properties,
+      };
+    });
 
   const edges = graphData.rels.map((rel) => ({
     from: rel.from,
