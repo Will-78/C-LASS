@@ -186,7 +186,6 @@ const Chat = () => {
         }
       }
       
-      setGeneratingResponse(false);
       setFullChatLog(prevLog => [...prevLog, {role: "assistant", content: fullResponseText}]);
       
     } catch (error) {
