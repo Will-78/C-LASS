@@ -198,7 +198,9 @@ export default function GraphView() {
         />
       )}
 
-      {/* Graph curation menu */}
+      {/* Graph curation menu toggle when clicking off */}
+      {menuData && <div className="fixed inset-0 z-10" onClick={() => setMenuData(null)} />}
+        {/* Graph curation menu */}
       {menuData && (
         <GraphCurationMenu
           position={menuData}
