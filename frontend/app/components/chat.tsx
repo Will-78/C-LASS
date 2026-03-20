@@ -140,7 +140,7 @@ const Chat = () => {
 
   const streamResponse = async() => {
     try {
-      console.log(chats)
+      setGeneratingResponse(true);
       let chatId = currentChat?.id;
 
       // If this is a new chat, create it first
@@ -151,7 +151,6 @@ const Chat = () => {
       setFullChatLog(prevLog => [...prevLog, {role: "user", content: userMessage}]);
       const userMsg = userMessage; // save current text
       setUserMessage('');
-      setGeneratingResponse(true);
 
       let ongoingText = "...";
       setStreamedText(ongoingText);
@@ -192,6 +191,9 @@ const Chat = () => {
       
     } catch (error) {
       console.error("Error fetching response.", error);
+    } finally
+    {      
+      setGeneratingResponse(false);
     }
   }
 
