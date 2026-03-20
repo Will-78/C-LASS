@@ -30,27 +30,28 @@ export default function GraphView() {
   const [promptSaveMessage, setPromptSaveMessage] = useState("");
 
   // Load initial graph and teacher prompt
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch('/api/get-graph-info');
-        const data = await response.json();
-        setGraphData(formatGraphResponse(data));
+  const fetchData = async () => {
+    try {
+      const response = await fetch('/api/get-graph-info');
+      const data = await response.json();
+      setGraphData(formatGraphResponse(data));
 
-        const username = localStorage.getItem("username");
-        if (username) {
-          const res = await fetch("/api/get-teacher-prompt", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ username })
-          });
-          const dataPrompt = await res.json();
-          setTeacherPrompt(dataPrompt.prompt || "");
-        }
-      } catch (error) {
-        console.error('Error fetching graph data or teacher prompt:', error);
+      const username = localStorage.getItem("username");
+      if (username) {
+        const res = await fetch("/api/get-teacher-prompt", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username })
+        });
+        const dataPrompt = await res.json();
+        setTeacherPrompt(dataPrompt.prompt || "");
       }
-    };
+    } catch (error) {
+      console.error('Error fetching graph data or teacher prompt:', error);
+    }
+  };
+  
+  useEffect(() => {
     fetchData();
   }, []);
 
