@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import SignInPopup from "./signin-popup";
+import SignInPopup from "./SignInPopup";
 
 type UserIconProps = {
   currentUser: string | null;
@@ -28,30 +28,20 @@ export default function UserIcon({
   }, []);
 
   return (
-    <div className="relative w-full">
+    <div className="relative">
       <button
         onClick={() => setShowPopup(true)}
-        className="account-trigger flex w-full items-center gap-3 rounded-2xl border border-sky-200 bg-sky-50 px-3 py-3 text-left transition hover:bg-white"
+        className="w-8 h-8 rounded-full overflow-hidden border-none cursor-pointer relative"
       >
-        <div className="relative h-10 w-10 overflow-hidden rounded-full">
-          <Image
-            src="/user.png"
-            alt="User"
-            fill
-            style={{ objectFit: "cover" }}
-          />
-        </div>
-
-        <div className="min-w-0 flex-1">
-          <div className="text-sm font-semibold text-sky-900">
-            {currentUser || "Account"}
-          </div>
-          <div className="text-xs text-sky-700/75">
-            {currentUser ? `${userRole || "Student"} account` : "Sign in or create an account"}
-          </div>
-        </div>
+        <Image
+          src="/user.png"
+          alt="User"
+          fill
+          style={{ objectFit: "cover" }}
+        />
       </button>
 
+    {/* show pop up only if showPopUp is true (logical AND)*/}
       {showPopup && (
         <SignInPopup
           onClose={() => setShowPopup(false)}
@@ -61,18 +51,20 @@ export default function UserIcon({
         />
       )}
 
+    {/* show signed-in info only if there exists a current user and the popup is not open*/}
       {currentUser && !showPopup && (
-        <div className="account-popover absolute right-0 top-[calc(100%+0.75rem)] z-50 w-full rounded-2xl border border-sky-200 bg-white p-3 shadow-lg shadow-sky-100">
-          <p className="text-sm text-slate-800">
+        <div className="absolute top-10 right-0 bg-white p-3 rounded-lg border border-gray-300 w-48 z-50">
+          <p>
             Signed in as: <b>{currentUser}</b>
           </p>
-          <p className="mt-1 text-sm text-sky-700">
+          <p className="text-sm text-gray-600">
             Role: <b>{userRole || "Student"}</b>
           </p>
 
           <button
-            className="mt-3 w-full rounded-xl border border-sky-300 bg-white py-2 font-bold text-sky-700 transition hover:bg-sky-50"
+            className="mt-2 w-full py-1 bg-green-100 text-green-700 rounded font-bold hover:bg-green-200"
             onClick={() => {
+              // clear localStorage and state
               localStorage.removeItem("username");
               localStorage.removeItem("userRole");
               setCurrentUser(null);

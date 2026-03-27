@@ -15,25 +15,25 @@ export default function GraphCurationMenu({
 }: GraphCurationMenuProps) {
   return (
     <div
-      className="fixed z-[9999] bg-white text-slate-900 rounded-lg shadow-2xl py-2 w-48 border border-slate-200"
+      className="kg-context-menu fixed z-[9999] w-52 rounded-2xl border border-sky-200 bg-white/95 py-2 text-slate-900 shadow-2xl shadow-sky-100"
       style={{
         top: `${position.y}px`,
         left: `${position.x}px`,
       }}
       onClick={(event) => event.stopPropagation()}
     >
-      <div className="px-4 py-1 text-xs font-bold text-slate-400 uppercase tracking-wider">
+      <div className="px-4 py-1 text-xs font-bold uppercase tracking-wider text-sky-500">
         Actions
       </div>
       <button
         onClick={onAddNode}
-        className="w-full text-left px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 transition-colors flex items-center gap-2 font-medium"
+        className="kg-context-action flex w-full items-center gap-2 px-4 py-2 text-left font-medium text-sky-900 transition-colors hover:bg-sky-50"
       >
         Add New Node
       </button>
       <button
         onClick={onAddRelationship}
-        className="w-full text-left px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 transition-colors flex items-center gap-2 font-medium"
+        className="kg-context-action flex w-full items-center gap-2 px-4 py-2 text-left font-medium text-sky-900 transition-colors hover:bg-sky-50"
       >
         Add New Relationship
       </button>

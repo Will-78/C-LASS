@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { useState } from "react";
 
 type SignInPopupProps = {
@@ -20,7 +21,6 @@ export default function SignInPopup({
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
-  // handle sign in
   const handleSignIn = async () => {
     try {
       const res = await fetch("/api/signin", {
@@ -33,10 +33,8 @@ export default function SignInPopup({
       if (res.ok) {
         setCurrentUser(username);
         setUserRole(data.role || "Student");
-
         localStorage.setItem("username", username);
         localStorage.setItem("userRole", data.role || "Student");
-
         onClose();
         setUsername("");
         setPassword("");
@@ -48,7 +46,6 @@ export default function SignInPopup({
     }
   };
 
-  // handle sign up
   const handleSignUp = async () => {
     try {
       const res = await fetch("/api/signup", {
@@ -61,10 +58,8 @@ export default function SignInPopup({
       if (res.ok) {
         setCurrentUser(username);
         setUserRole(signupRole || "Student");
-
         localStorage.setItem("username", username);
         localStorage.setItem("userRole", signupRole || "Student");
-
         onClose();
         setUsername("");
         setPassword("");
@@ -76,107 +71,121 @@ export default function SignInPopup({
     }
   };
 
-  // Step renderers
-  const renderChooseStep = () => (
+  const shell = (title: string, subtitle: string, content: ReactNode) => (
     <>
-      <h2 className="mb-5 font-bold text-green-500">Welcome</h2>
-      <button
-        onClick={() => setStep("signin")}
-        className="w-full py-2 mb-3 rounded-lg border-2 border-green-500 bg-white font-bold text-green-500 hover:bg-green-100"
-      >
-        Sign In
-      </button>
-      <button
-        onClick={() => setStep("signupRole")}
-        className="w-full py-2 mb-3 rounded-lg border-2 border-green-500 bg-white font-bold text-green-500 hover:bg-green-100"
-      >
-        Sign Up
-      </button>
+      <div className="mb-6 text-center">
+        <h2 className="text-3xl font-bold bg-gradient-to-r from-sky-500 to-blue-600 bg-clip-text text-transparent">
+          {title}
+        </h2>
+        <p className="mt-2 text-sm text-sky-900/70">{subtitle}</p>
+      </div>
+      <div className="w-full">{content}</div>
     </>
   );
 
-  const renderSignInForm = () => (
-    <>
-      <h2 className="mb-5 font-bold text-green-500">Sign In</h2>
-      <input
-        type="text"
-        placeholder="Username"
-        value={username}
-        onChange={(e) => setUsername(e.target.value)}
-        className="w-full py-2 px-3 mb-3 rounded-lg border-2 border-green-500 text-green-500"
-      />
-      <input
-        type="password"
-        placeholder="Password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        className="w-full py-2 px-3 mb-3 rounded-lg border-2 border-green-500 text-green-500"
-      />
-      <button
-        onClick={handleSignIn}
-        className="w-full py-2 mt-3 rounded-lg border-2 border-green-500 bg-white font-bold text-green-500 hover:bg-green-100"
-      >
-        Sign In
-      </button>
-    </>
-  );
+  const actionButton =
+    "w-full rounded-xl border border-sky-200 bg-white py-3 font-semibold text-sky-500 shadow-sm transition hover:bg-sky-100 hover:shadow-md";
 
-  const renderSignupRole = () => (
-    <>
-      <h2 className="mb-5 font-bold text-green-500">Sign Up</h2>
-      <button
-        onClick={() => {
-          setSignupRole("Teacher");
-          setStep("signupForm");
-        }}
-        className="w-full py-2 mb-3 rounded-lg border-2 border-green-500 bg-white font-bold text-green-500 hover:bg-green-100"
-      >
-        Teacher
-      </button>
-      <button
-        onClick={() => {
-          setSignupRole("Student");
-          setStep("signupForm");
-        }}
-        className="w-full py-2 mb-3 rounded-lg border-2 border-green-500 bg-white font-bold text-green-500 hover:bg-green-100"
-      >
-        Student
-      </button>
-    </>
-  );
+  const fieldClass =
+    "w-full rounded-xl border border-sky-200 bg-white px-4 py-3 text-sky-500 placeholder:text-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-400 focus:border-transparent";
 
-  const renderSignupForm = () => (
-    <>
-      <h2 className="mb-5 font-bold text-green-500">Sign Up</h2>
-      <p className="mb-3 text-green-500">{signupRole}</p>
-      <input
-        type="text"
-        placeholder="Username"
-        value={username}
-        onChange={(e) => setUsername(e.target.value)}
-        className="w-full py-2 px-3 mb-3 rounded-lg border-2 border-green-500 text-green-500"
-      />
-      <input
-        type="password"
-        placeholder="Password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        className="w-full py-2 px-3 mb-3 rounded-lg border-2 border-green-500 text-green-500"
-      />
-      <button
-        onClick={handleSignUp}
-        className="w-full py-2 mt-3 rounded-lg border-2 border-green-500 bg-white font-bold text-green-500 hover:bg-green-100"
-      >
-        Sign Up
-      </button>
-    </>
-  );
+  const primaryButton =
+    "w-full rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 py-3 font-semibold text-white shadow-md transition hover:scale-[1.02] hover:shadow-lg";
 
-  const renderSignedInView = () => (
-    <>
-      <h2 className="mb-5 font-bold text-green-500">
-        Signed in as {currentUser}
-      </h2>
+  const renderChooseStep = () =>
+    shell(
+      "Welcome",
+      "Access your account or create one.",
+      <div className="space-y-3">
+        <button onClick={() => setStep("signin")} className={actionButton}>
+          Sign In
+        </button>
+        <button onClick={() => setStep("signupRole")} className={actionButton}>
+          Sign Up
+        </button>
+      </div>
+    );
+
+  const renderSignInForm = () =>
+    shell(
+      "Sign In",
+      "Use your existing account credentials.",
+      <div className="space-y-3">
+        <input
+          type="text"
+          placeholder="Username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          className={fieldClass}
+        />
+        <input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          className={fieldClass}
+        />
+        <button onClick={handleSignIn} className={primaryButton}>
+          Sign In
+        </button>
+      </div>
+    );
+
+  const renderSignupRole = () =>
+    shell(
+      "Sign Up",
+      "Choose the role for the account you want to create.",
+      <div className="grid grid-cols-2 gap-3">
+        <button
+          onClick={() => {
+            setSignupRole("Teacher");
+            setStep("signupForm");
+          }}
+          className={actionButton}
+        >
+          Teacher
+        </button>
+        <button
+          onClick={() => {
+            setSignupRole("Student");
+            setStep("signupForm");
+          }}
+          className={actionButton}
+        >
+          Student
+        </button>
+      </div>
+    );
+
+  const renderSignupForm = () =>
+    shell(
+      "Create Account",
+      `Creating a ${signupRole || "Student"} account.`,
+      <div className="space-y-3">
+        <input
+          type="text"
+          placeholder="Username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          className={fieldClass}
+        />
+        <input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          className={fieldClass}
+        />
+        <button onClick={handleSignUp} className={primaryButton}>
+          Sign Up
+        </button>
+      </div>
+    );
+
+  const renderSignedInView = () =>
+    shell(
+      "Account",
+      `You are signed in as ${currentUser}.`,
       <button
         onClick={() => {
           localStorage.removeItem("username");
@@ -185,32 +194,60 @@ export default function SignInPopup({
           setUserRole(null);
           onClose();
         }}
-        className="w-full py-2 mt-3 rounded-lg border-2 border-green-500 bg-white font-bold text-green-500 hover:bg-green-100"
+        className={actionButton}
       >
         Sign Out
       </button>
-    </>
-  );
+    );
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-      <div className="bg-white p-6 rounded-xl min-w-[300px] flex flex-col items-center">
-        {currentUser
-          ? renderSignedInView()
-          : step === "choose"
-          ? renderChooseStep()
-          : step === "signin"
-          ? renderSignInForm()
-          : step === "signupRole"
-          ? renderSignupRole()
-          : renderSignupForm()}
+    <div className="auth-overlay fixed inset-0 z-[10000] bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.98),_rgba(224,242,254,0.96)_36%,_rgba(186,230,253,0.88)_100%)] backdrop-blur-sm">
+      <div className="grid min-h-screen md:grid-cols-[1.05fr_1fr]">
+        <div className="auth-side flex flex-col justify-between border-r border-sky-200/80 bg-[linear-gradient(180deg,_rgba(14,165,233,0.12),_rgba(224,242,254,0.32))] px-10 py-12 md:px-14">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.35em] text-sky-500">
+              KGTutor
+            </p>
+            <h3 className="mt-4 max-w-md text-4xl font-bold text-slate-500">
+              Sign in or create your account
+            </h3>
+            <p className="mt-5 max-w-lg text-base leading-7 text-sky-500">
+              An AI-powered learning experience built to guide you through complex cybersecurity concepts.
+            </p>
+          </div>
 
-        <button
-          onClick={onClose}
-          className="w-full py-2 mt-3 rounded-lg border-2 border-green-500 bg-white font-bold text-green-500 hover:bg-green-100"
-        >
-          Close
-        </button>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="rounded-3xl border border-sky-200 bg-white/70 p-5 text-sm text-sky-900 shadow-sm shadow-sky-100">
+              Understand. Analyze. Secure.
+            </div>
+            <div className="rounded-3xl border border-sky-200 bg-white/70 p-5 text-sm text-sky-900 shadow-sm shadow-sky-100">
+              Get guided help, understand the concepts, and actually learn as you go.
+            </div>
+          </div>
+        </div>
+
+        <div className="flex min-h-screen items-center justify-center px-6 py-8 sm:px-10 md:px-14">
+          <div className="auth-card w-full max-w-xl rounded-[2rem] border border-sky-200 bg-white/80 p-8 shadow-2xl shadow-sky-200/70 backdrop-blur-md sm:p-10">
+            <div className="w-full">
+              {currentUser
+                ? renderSignedInView()
+                : step === "choose"
+                ? renderChooseStep()
+                : step === "signin"
+                ? renderSignInForm()
+                : step === "signupRole"
+                ? renderSignupRole()
+                : renderSignupForm()}
+            </div>
+
+            <button
+              onClick={onClose}
+              className="mt-6 w-full rounded-xl border border-sky-300 bg-white py-3 font-semibold text-sky-700 transition hover:bg-sky-50"
+            >
+              Close
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
