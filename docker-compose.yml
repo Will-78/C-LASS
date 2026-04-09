@@ -41,8 +41,6 @@ services:
     working_dir: /app
     env_file:
       - .backend-env
-    environment:
-      - DB_URL=sqlite:///./temp.db
     ports:
       - "8000:8000"
     volumes:
