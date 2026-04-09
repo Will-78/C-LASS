@@ -161,15 +161,21 @@ export default function GraphView() {
             }));
             setSelectedEntity(null);
             setChangesMade(true);
-            const entryId = deletedEntity.entryId ? ['node', deletedEntity.entryId.toString()] : ['rel', deletedEntity.id];
+            const entryId = 'entryId' in deletedEntity && deletedEntity.entryId 
+              ? ['node', deletedEntity.entryId.toString()] 
+              : ['rel', deletedEntity.id];
             setEntitiesToDelete(prev => new Set(prev).add(entryId));
           }}
           onSave={(updatedEntity) => {
             const updatedCaption = String((updatedEntity as any).caption ?? '').trim();
             const updatedNodeId = updatedCaption ? `__Entity__:${updatedCaption}` : updatedEntity.id;
 
-            if( updatedCaption )
-              setEntitiesToDelete(prev => new Set(prev).add(['node', updatedEntity.entryId.toString()]));
+            if( updatedCaption && 'entryId' in updatedEntity && updatedEntity.entryId ) {
+              const eId = updatedEntity.entryId;
+              if (eId !== null) {
+                setEntitiesToDelete(prev => new Set(prev).add(['node', eId.toString()]));
+              }
+            }
 
             setGraphData(prevData => ({
               ...prevData,
