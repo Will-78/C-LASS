@@ -1,0 +1,8 @@
+name: CI Testing
+on:
+  push:
+  workflow_dispatch:
+jobs:
+  stub:
+    runs-on: ubuntu-latest
+    steps: [ { run: echo "Workflow Registered" } ]
