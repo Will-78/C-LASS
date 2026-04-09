@@ -20,6 +20,9 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      - name: Create Backend Env File
+        run: echo "${{ secrets.BACKEND_ENV }}" > .backend-env
+        
       - name: Build Containers
         run: docker compose build
 
