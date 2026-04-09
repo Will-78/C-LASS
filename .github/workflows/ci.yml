@@ -11,7 +11,7 @@ env:
 
 jobs:
   test-suite:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout Code
@@ -21,10 +21,10 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Build Containers
-        run: docker-compose build
+        run: docker compose build
 
       - name: Run Backend Tests
-        run: docker-compose run --rm backend pytest tests/
+        run: docker compose run --rm backend pytest tests/
 
       - name: Run Frontend Tests
-        run: docker-compose run -T --rm frontend npm run test
+        run: docker compose run -T --rm frontend npm run test
