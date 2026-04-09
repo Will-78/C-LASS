@@ -10,7 +10,8 @@ RUN pip install --upgrade pip && \
 COPY . .
 
 ENV PYTHONPATH=/app
-ENV DB_URL="sqlite:///temp.db"
+# Define db here for now (if we scale up to PostgreSQL we can define it in .backend-env)
+ENV DB_URL="sqlite:///test.db"
 
 # To run tests inside the running container, use:
 # docker exec -it backend pytest tests/
