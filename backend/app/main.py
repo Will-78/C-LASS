@@ -14,7 +14,7 @@ from .rag import TutorManager
 # -----------------------------
 # DATABASE MANAGER
 # -----------------------------
-SQLALCHEMY_DATABASE_URL = "sqlite:///test.db"
+SQLALCHEMY_DATABASE_URL = os.environ["DB_URL"]
 db_manager = DBManager(SQLALCHEMY_DATABASE_URL)
 
 # -----------------------------
