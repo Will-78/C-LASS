@@ -140,7 +140,13 @@ export default function GraphView() {
     }
 
     setRelMenu(false);
-    const newRel = { id: `rel-${Date.now()}`, from: nodeId1, to: nodeId2, caption: normalizeRelCaption(caption) };
+    const newRel = {
+      id: `rel-${Date.now()}`,
+      from: nodeId1,
+      to: nodeId2,
+      caption: normalizeRelCaption(caption),
+      color: '#f7d774'
+    };
     setGraphData(prev => ({ ...prev, rels: [...prev.rels, newRel] }));
     setChangesMade(true);
     setNewRelationship(null);
@@ -223,7 +229,7 @@ export default function GraphView() {
       }
 
       {/* Neo4j nvl wrapper */}
-      <div className="absolute inset-0 box-border bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.92),_rgba(224,242,254,0.9)_40%,_rgba(186,230,253,0.72)_100%)]">
+      <div className="kg-canvas absolute inset-0 box-border">
         <InteractiveNvlWrapper 
           nodes={graphData.nodes} 
           rels={graphData.rels}
@@ -243,7 +249,7 @@ export default function GraphView() {
 
       {/* Teacher prompt input */}
       <div className="kg-prompt-card absolute bottom-24 left-4 w-[320px] rounded-2xl border border-sky-200 bg-white/92 p-3 shadow-lg shadow-sky-100">
-        <div className="mb-1 font-semibold text-sky-500">Teacher Prompt</div>
+        <div className="mb-1 font-semibold text-white">Teacher Prompt</div>
         <textarea
           className="min-h-28 w-full rounded-xl border border-sky-200 bg-sky-50 p-3 text-slate-800 placeholder:text-sky-900 focus:outline-none focus:ring-2 focus:ring-sky-300"
           placeholder="Enter custom instructions..."
@@ -251,16 +257,16 @@ export default function GraphView() {
           onChange={(e) => { setTeacherPrompt(e.target.value); setTeacherPromptChanged(true); }}
         />
         {promptSaveMessage && (
-          <div className="mt-1 text-sm text-sky-600">{promptSaveMessage}</div>
+          <div className="mt-1 text-sm text-white/85">{promptSaveMessage}</div>
         )}
       </div>
 
       <button 
         className="kg-save-button absolute bottom-4 left-4 z-[9999] rounded-xl border px-4 py-2 shadow-lg transition-colors disabled:cursor-not-allowed disabled:opacity-50"
         style={{
-          backgroundColor: changesMade || teacherPromptChanged ? '#0ea5e9' : '#e0f2fe',
-          color: changesMade || teacherPromptChanged ? '#ffffff' : '#7dd3fc',
-          borderColor: changesMade || teacherPromptChanged ? '#0ea5e9' : '#bae6fd'
+          backgroundColor: changesMade || teacherPromptChanged ? '#b88700' : '#4a6075',
+          color: changesMade || teacherPromptChanged ? '#f7f1d6' : '#d6c78b',
+          borderColor: changesMade || teacherPromptChanged ? '#b88700' : '#5f7690'
         }}
         disabled={!(changesMade || teacherPromptChanged) || isSaving}
         onClick={() => { setSelectedEntity(null); setMenuData(null); saveChanges(); }}

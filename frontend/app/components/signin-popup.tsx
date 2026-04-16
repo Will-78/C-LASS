@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import type { ReactNode } from "react";
 import { useState } from "react";
 
@@ -74,10 +75,10 @@ export default function SignInPopup({
   const shell = (title: string, subtitle: string, content: ReactNode) => (
     <>
       <div className="mb-6 text-center">
-        <h2 className="text-3xl font-bold bg-gradient-to-r from-sky-500 to-blue-600 bg-clip-text text-transparent">
+        <h2 className="text-3xl font-bold text-white">
           {title}
         </h2>
-        <p className="mt-2 text-sm text-sky-900/70">{subtitle}</p>
+        <p className="mt-2 text-sm text-white/85">{subtitle}</p>
       </div>
       <div className="w-full">{content}</div>
     </>
@@ -211,9 +212,19 @@ export default function SignInPopup({
             <h3 className="mt-4 max-w-md text-4xl font-bold text-slate-500">
               Sign in or create your account
             </h3>
-            <p className="mt-5 max-w-lg text-base leading-7 text-sky-500">
+            <p className="mt-5 max-w-lg text-base leading-7 text-white">
               An AI-powered learning experience built to guide you through complex cybersecurity concepts.
             </p>
+            <div className="mt-6">
+              <Image
+                src="/logo.png"
+                alt="KGTutor logo"
+                width={1060}
+                height={1060}
+                className="h-auto w-[32rem] max-w-none object-contain md:w-[52rem]"
+                priority
+              />
+            </div>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
