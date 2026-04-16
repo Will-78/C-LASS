@@ -171,6 +171,14 @@ body {
   color: #f7f1d6;
 }
 
+.chat-assistant :where(p, li, blockquote, code, pre, strong, em, h1, h2, h3, h4, a) {
+  color: inherit;
+}
+
+.chat-assistant :where(a) {
+  text-decoration-color: rgba(241, 179, 0, 0.6);
+}
+
 .auth-overlay {
   background:
     radial-gradient(circle at top, rgba(12, 74, 115, 0.98), rgba(0, 52, 102, 0.97) 38%, rgba(0, 29, 55, 0.96) 100%);
@@ -190,6 +198,11 @@ body {
 
 .kg-shell {
   background: rgba(0, 52, 102, 0.76);
+}
+
+.kg-canvas {
+  background:
+    radial-gradient(circle at top, rgba(23, 89, 136, 0.96), rgba(0, 52, 102, 0.94) 42%, rgba(0, 29, 55, 0.9) 100%);
 }
 
 .kg-relationship-overlay,
@@ -308,6 +321,10 @@ body {
   color: #f7f1d6;
 }
 
+.theme-dark .chat-assistant :where(p, li, blockquote, code, pre, strong, em, h1, h2, h3, h4, a) {
+  color: inherit;
+}
+
 .theme-dark .kg-context-action:hover,
 .theme-dark .kg-upload-secondary:hover,
 .theme-dark .kg-relationship-secondary:hover,
@@ -347,4 +364,9 @@ body {
 
 .theme-dark .kg-shell {
   background: rgba(0, 27, 51, 0.84);
+}
+
+.theme-dark .kg-canvas {
+  background:
+    radial-gradient(circle at top, rgba(7, 40, 68, 0.98), rgba(0, 27, 51, 0.96) 42%, rgba(2, 6, 23, 0.94) 100%);
 }

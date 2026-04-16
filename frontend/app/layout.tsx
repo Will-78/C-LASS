@@ -33,6 +33,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     localStorage.setItem("theme", theme);
   }, [theme]);
 
+  const visibleNavItems =
+    userRole === "Teacher"
+      ? navItems
+      : currentUser
+        ? navItems.filter((item) => item.href === "/")
+        : [];
+
   return (
     <html lang="en">
       <body className={`min-h-screen bg-transparent text-slate-800 ${theme === "dark" ? "theme-dark" : ""}`}>
@@ -45,12 +52,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 </p>
                 <h1 className="mt-2 text-2xl font-bold text-sky-950">KGTutor</h1>
                 <p className="mt-2 text-sm text-sky-700/75">
-                  Instructors switch between the chat experience and the knowledge graph.
+                  {userRole === "Teacher"
+                    ? "Instructor access includes both chat and the knowledge graph."
+                    : currentUser
+                      ? "Student access includes chat only."
+                      : "Sign in to unlock the views available to your role."}
                 </p>
               </div>
 
               <nav className="space-y-3">
-                {navItems.map((item) => {
+                {visibleNavItems.map((item) => {
                   const isActive = pathname === item.href;
 
                   return (
@@ -67,6 +78,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                     </Link>
                   );
                 })}
+                {visibleNavItems.length === 0 && (
+                  <div className="rounded-2xl border border-sky-200/60 bg-sky-50/40 px-4 py-3 text-sm text-white/80">
+                    No views are available until you sign in.
+                  </div>
+                )}
               </nav>
 
               <div className="mt-8 rounded-2xl border border-sky-200 bg-white/70 p-3 shadow-sm shadow-sky-100">
