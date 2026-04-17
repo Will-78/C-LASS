@@ -1,9 +1,6 @@
 // Import testing tools from React Testing Lib
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 
-// import react
-import React from "react";
-
 //import testing component
 import SignInPopup from "../app/components/signin-popup";
 
