@@ -61,7 +61,7 @@ def manager_with_mock_query():
     return manager
 
 
-def test_init_calls_driver_and_setup_constraints(monkeypatch):
+def test_init_driver_and_setup_constraints(monkeypatch):
     session = FakeSession()
     fake_driver = FakeDriver(session)
     captured = {}
@@ -120,7 +120,7 @@ def test_delete_relationship_by_id_uses_element_id(manager_with_mock_query):
         {"rel_id": "rel-456"},
     )
 
-def test_create_or_update_node_sets_default_name_and_preserves_input(manager_with_mock_query):
+def test_create_or_update_node(manager_with_mock_query):
     properties = {"id": "ignored", "title": "Professor"}
     original = properties.copy()
 
@@ -141,7 +141,7 @@ def test_create_or_update_node_sets_default_name_and_preserves_input(manager_wit
         "props": {"title": "Professor", "name": "person-1"},
     }
 
-def test_create_or_update_relationship_normalizes_type(manager_with_mock_query):
+def test_create_or_update_relationship(manager_with_mock_query):
     manager_with_mock_query.create_or_update_relationship(
         "from-1",
         "to-2",
@@ -159,7 +159,7 @@ def test_create_or_update_relationship_normalizes_type(manager_with_mock_query):
         "props": {"weight": 1},
     }
 
-def test_get_full_graph_deduplicates_nodes_and_maps_edges():
+def test_get_full_graph_nodes_and_maps_edges():
     manager = KnowledgeGraphManager.__new__(KnowledgeGraphManager)
     manager.driver = FakeDriver()
 
