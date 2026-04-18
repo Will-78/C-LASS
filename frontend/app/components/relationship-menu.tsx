@@ -24,7 +24,7 @@ export default function RelationshipMenu({
           </label>
           <input
             className="kg-relationship-input rounded-xl border border-sky-200 bg-sky-50 p-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-300"
-            placeholder="Node Caption"
+            placeholder="Node Caption Source"
             value={draft.from}
             onChange={(event) => onChange({ ...draft, from: event.target.value })}
           />
@@ -44,7 +44,7 @@ export default function RelationshipMenu({
           </label>
           <input
             className="kg-relationship-input rounded-xl border border-sky-200 bg-sky-50 p-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-300"
-            placeholder="Node Caption"
+            placeholder="Node Caption Target"
             value={draft.to}
             onChange={(event) => onChange({ ...draft, to: event.target.value })}
           />
