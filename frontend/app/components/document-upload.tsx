@@ -63,17 +63,17 @@ export default function DocumentUpload({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="max-w-md w-full mx-auto p-6 bg-white rounded-lg shadow-xl relative">
+    <div className="kg-upload-overlay fixed inset-0 z-50 flex items-center justify-center bg-sky-950/20 backdrop-blur-sm">
+      <div className="kg-upload-card relative mx-auto w-full max-w-md rounded-2xl border border-sky-200 bg-white/95 p-6 shadow-xl shadow-sky-100">
         {/* Dropzone */}
         <div 
           {...getRootProps()} 
-          className={`p-10 border-2 border-dashed rounded-lg text-center cursor-pointer transition-colors
-            ${isDragActive ? "border-blue-500 bg-blue-50" : "border-gray-300 bg-white hover:bg-gray-50"}`}
+          className={`kg-upload-dropzone cursor-pointer rounded-2xl border-2 border-dashed p-10 text-center transition-colors
+            ${isDragActive ? "border-sky-500 bg-sky-100" : "border-sky-300 bg-sky-50 hover:bg-sky-100/60"}`}
         >
           <input {...getInputProps()} />
-          <p className="text-gray-600">
-            Drag docs here, or <span className="text-blue-600 font-semibold">select files</span><br />
+          <p className="text-sky-800">
+            Drag docs here, or <span className="font-semibold text-sky-600">select files</span><br />
             Accepted File Type: .pdf
           </p>
         </div>
@@ -81,21 +81,21 @@ export default function DocumentUpload({
         {/* File preview */}
         <ul className="mt-6 space-y-2">
           {files.map((file, index) => (
-            <li key={index} className="flex items-center justify-between gap-3 p-3 bg-gray-50 rounded border border-gray-200">
+            <li key={index} className="kg-upload-file flex items-center justify-between gap-3 rounded-xl border border-sky-200 bg-sky-50 p-3">
               <button
                 type="button"
                 onClick={() => removeFile(index)}
-                className="text-xs font-bold text-gray-500 hover:text-gray-600"
+                className="text-xs font-bold text-sky-500 hover:text-sky-700"
               >
                 X
               </button>
-              <span className="text-sm truncate text-gray-700 w-48">{file.name}</span>
+              <span className="w-48 truncate text-sm text-sky-900">{file.name}</span>
               <div className="flex items-center gap-2">
                 <a 
                   href={file.preview} 
                   target="_blank"
                   rel="noreferrer"
-                  className="text-xs font-bold text-blue-600 hover:underline"
+                  className="text-xs font-bold text-sky-600 hover:underline"
                 >
                   PREVIEW
                 </a>
@@ -104,23 +104,25 @@ export default function DocumentUpload({
           ))}
         </ul>
         
-        <button
-          onClick={onUpload}
-          className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors"
-        >
-          Build KG
-        </button>
-        <button
-          onClick={() => {
-            clearFiles();
-            setStatus("");
-            onCancel();
-          }}
-          className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition-colors"
-        >
-          Cancel
-        </button>
-        <div className="text-gray-600">
+        <div className="mt-5 flex gap-3">
+          <button
+            onClick={onUpload}
+            className="kg-upload-primary rounded-xl bg-sky-500 px-4 py-2 font-bold text-white transition-colors hover:bg-sky-400"
+          >
+            Build KG
+          </button>
+          <button
+            onClick={() => {
+              clearFiles();
+              setStatus("");
+              onCancel();
+            }}
+            className="kg-upload-secondary rounded-xl border border-sky-300 bg-white px-4 py-2 font-bold text-sky-700 transition-colors hover:bg-sky-50"
+          >
+            Cancel
+          </button>
+        </div>
+        <div className="mt-3 text-sky-700">
           {status}
         </div>
       </div>
