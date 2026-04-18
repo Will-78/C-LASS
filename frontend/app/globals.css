@@ -3,8 +3,19 @@
 @plugin "@tailwindcss/typography";
 
 :root {
-  --background: #ffffff;
-  --foreground: #242323;
+  --background: #003466;
+  --foreground: #f7f1d6;
+  --body-start: #0b4a73;
+  --body-mid: #003466;
+  --body-end: #001d37;
+}
+
+.theme-dark {
+  --background: #001b33;
+  --foreground: #f7f1d6;
+  --body-start: #0a2b49;
+  --body-mid: #001b33;
+  --body-end: #030712;
 }
 
 @theme inline {
@@ -12,13 +23,6 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 @layer base {
@@ -48,7 +52,321 @@
 }
 
 body {
-  background: var(--background);
+  background:
+    radial-gradient(circle at top, var(--body-start) 0%, var(--body-mid) 42%, var(--body-end) 100%);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+.app-sidebar {
+  border-color: rgba(241, 179, 0, 0.28);
+  background: rgba(0, 52, 102, 0.88);
+  box-shadow: 0 18px 40px rgba(1, 19, 37, 0.4);
+}
+
+.app-sidebar p,
+.app-sidebar h1,
+.app-topbar {
+  color: #f7f1d6;
+}
+
+.nav-link,
+.theme-toggle,
+.account-trigger,
+.account-popover,
+.chat-frame,
+.chat-header,
+.chat-composer,
+.kg-shell,
+.kg-entity-panel,
+.kg-context-menu,
+.kg-relationship-card,
+.kg-upload-card,
+.kg-prompt-card,
+.kg-saving-toast,
+.kg-upload-button,
+.auth-card,
+.auth-side {
+  border-color: rgba(241, 179, 0, 0.24);
+}
+
+.nav-link,
+.theme-toggle,
+.account-trigger,
+.account-popover,
+.chat-frame,
+.chat-header,
+.chat-composer,
+.kg-shell,
+.kg-entity-panel,
+.kg-context-menu,
+.kg-relationship-card,
+.kg-upload-card,
+.kg-prompt-card,
+.kg-saving-toast,
+.kg-upload-button,
+.auth-card {
+  background: rgba(0, 52, 102, 0.86);
+  color: #f7f1d6;
+  box-shadow: 0 18px 40px rgba(1, 19, 37, 0.35);
+}
+
+.nav-link {
+  color: #f7f1d6;
+}
+
+.nav-link:hover,
+.theme-toggle:hover,
+.account-trigger:hover,
+.kg-context-action:hover,
+.kg-upload-secondary:hover,
+.kg-relationship-secondary:hover,
+.kg-entity-secondary:hover {
+  background: rgba(3, 67, 130, 0.96);
+}
+
+.nav-link-active,
+.chat-user-bubble,
+.chat-send,
+.kg-save-button,
+.kg-relationship-primary,
+.kg-upload-primary,
+.kg-entity-primary {
+  background: #f1b300;
+  border-color: #f1b300;
+  color: #003466;
+}
+
+.chat-select,
+.kg-upload-dropzone,
+.kg-upload-file,
+.kg-relationship-input,
+.kg-entity-input,
+.kg-upload-secondary,
+.kg-relationship-secondary,
+.kg-entity-secondary {
+  border-color: rgba(241, 179, 0, 0.24);
+  background: rgba(3, 67, 130, 0.78);
+  color: #f7f1d6;
+}
+
+.chat-select {
+  background: rgba(3, 67, 130, 0.82);
+}
+
+.chat-assistant,
+.account-popover p,
+.kg-context-menu,
+.kg-context-action,
+.kg-entity-panel,
+.kg-prompt-card,
+.kg-saving-toast,
+.kg-upload-button,
+.kg-upload-card,
+.kg-upload-file,
+.kg-relationship-card,
+.auth-side,
+.auth-card,
+.kg-loading-shell p {
+  color: #f7f1d6;
+}
+
+.chat-assistant :where(p, li, blockquote, code, pre, strong, em, h1, h2, h3, h4, a) {
+  color: inherit;
+}
+
+.chat-assistant :where(a) {
+  text-decoration-color: rgba(241, 179, 0, 0.6);
+}
+
+.auth-overlay {
+  background:
+    radial-gradient(circle at top, rgba(12, 74, 115, 0.98), rgba(0, 52, 102, 0.97) 38%, rgba(0, 29, 55, 0.96) 100%);
+}
+
+.auth-side {
+  background: linear-gradient(180deg, rgba(241, 179, 0, 0.16), rgba(0, 52, 102, 0.5));
+}
+
+.chat-frame {
+  background: rgba(0, 52, 102, 0.76);
+}
+
+.chat-header {
+  background: rgba(0, 40, 77, 0.84);
+}
+
+.kg-shell {
+  background: rgba(0, 52, 102, 0.76);
+}
+
+.kg-canvas {
+  background:
+    radial-gradient(circle at top, rgba(23, 89, 136, 0.96), rgba(0, 52, 102, 0.94) 42%, rgba(0, 29, 55, 0.9) 100%);
+}
+
+.kg-relationship-overlay,
+.kg-upload-overlay {
+  background: rgba(0, 29, 55, 0.52);
+}
+
+.theme-dark .app-sidebar {
+  border-color: rgba(241, 179, 0, 0.22);
+  background: rgba(0, 27, 51, 0.9);
+  box-shadow: 0 18px 40px rgba(2, 6, 23, 0.42);
+}
+
+.theme-dark .app-sidebar {
+  border-color: rgba(241, 179, 0, 0.22);
+}
+
+.theme-dark .app-topbar {
+  color: #e0f2fe;
+}
+
+.theme-dark .account-trigger,
+.theme-dark .account-popover,
+.theme-dark .chat-frame,
+.theme-dark .chat-header,
+.theme-dark .chat-composer,
+.theme-dark .kg-shell,
+.theme-dark .kg-entity-panel,
+.theme-dark .kg-context-menu,
+.theme-dark .kg-relationship-card,
+.theme-dark .kg-upload-card,
+.theme-dark .kg-prompt-card,
+.theme-dark .kg-saving-toast,
+.theme-dark .kg-upload-button,
+.theme-dark .auth-card,
+.theme-dark .auth-side {
+  border-color: rgba(241, 179, 0, 0.24);
+}
+
+.theme-dark .account-trigger,
+.theme-dark .account-popover,
+.theme-dark .chat-frame,
+.theme-dark .chat-header,
+.theme-dark .chat-composer,
+.theme-dark .kg-shell,
+.theme-dark .kg-entity-panel,
+.theme-dark .kg-context-menu,
+.theme-dark .kg-relationship-card,
+.theme-dark .kg-upload-card,
+.theme-dark .kg-prompt-card,
+.theme-dark .kg-saving-toast,
+.theme-dark .kg-upload-button,
+.theme-dark .auth-card {
+  background: rgba(0, 27, 51, 0.9);
+  color: #f7f1d6;
+  box-shadow: 0 18px 40px rgba(2, 6, 23, 0.38);
+}
+
+.theme-dark .auth-overlay {
+  background:
+    radial-gradient(circle at top, rgba(10, 43, 73, 0.98), rgba(0, 27, 51, 0.97) 38%, rgba(2, 6, 23, 0.96) 100%);
+}
+
+.theme-dark .kg-relationship-overlay,
+.theme-dark .kg-upload-overlay {
+  background: rgba(2, 6, 23, 0.5);
+}
+
+.theme-dark .auth-side {
+  background: linear-gradient(180deg, rgba(241, 179, 0, 0.14), rgba(2, 6, 23, 0.32));
+}
+
+.theme-dark .chat-frame {
+  background: rgba(0, 27, 51, 0.84);
+}
+
+.theme-dark .chat-header {
+  background: rgba(0, 20, 39, 0.9);
+}
+
+.theme-dark .chat-select,
+.theme-dark .chat-send,
+.theme-dark .chat-user-bubble,
+.theme-dark .kg-save-button {
+  border-color: rgba(241, 179, 0, 0.32);
+}
+
+.theme-dark .chat-select {
+  background: rgba(3, 67, 130, 0.58);
+  color: #f7f1d6;
+}
+
+.theme-dark .chat-user-bubble,
+.theme-dark .chat-send,
+.theme-dark .kg-save-button,
+.theme-dark .kg-relationship-primary,
+.theme-dark .kg-upload-primary,
+.theme-dark .kg-entity-primary {
+  background: #f1b300;
+  color: #003466;
+}
+
+.theme-dark .chat-assistant,
+.theme-dark .account-popover p,
+.theme-dark .kg-context-menu,
+.theme-dark .kg-context-action,
+.theme-dark .kg-entity-panel,
+.theme-dark .kg-prompt-card,
+.theme-dark .kg-saving-toast,
+.theme-dark .kg-upload-button,
+.theme-dark .kg-upload-card,
+.theme-dark .kg-upload-file,
+.theme-dark .kg-relationship-card,
+.theme-dark .auth-side,
+.theme-dark .auth-card {
+  color: #f7f1d6;
+}
+
+.theme-dark .chat-assistant :where(p, li, blockquote, code, pre, strong, em, h1, h2, h3, h4, a) {
+  color: inherit;
+}
+
+.theme-dark .kg-context-action:hover,
+.theme-dark .kg-upload-secondary:hover,
+.theme-dark .kg-relationship-secondary:hover,
+.theme-dark .kg-entity-secondary:hover {
+  background: rgba(3, 67, 130, 0.82);
+}
+
+.theme-dark .kg-upload-dropzone,
+.theme-dark .kg-upload-file,
+.theme-dark .kg-relationship-input,
+.theme-dark .kg-entity-input,
+.theme-dark .kg-context-menu,
+.theme-dark .kg-upload-secondary,
+.theme-dark .kg-relationship-secondary,
+.theme-dark .kg-entity-secondary {
+  border-color: rgba(241, 179, 0, 0.24);
+}
+
+.theme-dark .kg-upload-dropzone,
+.theme-dark .kg-upload-file,
+.theme-dark .kg-relationship-input,
+.theme-dark .kg-entity-input {
+  background: rgba(3, 67, 130, 0.58);
+  color: #f7f1d6;
+}
+
+.theme-dark .kg-upload-secondary,
+.theme-dark .kg-relationship-secondary,
+.theme-dark .kg-entity-secondary {
+  background: rgba(0, 27, 51, 0.9);
+  color: #f7f1d6;
+}
+
+.theme-dark .kg-loading-shell p {
+  color: #f7f1d6;
+}
+
+.theme-dark .kg-shell {
+  background: rgba(0, 27, 51, 0.84);
+}
+
+.theme-dark .kg-canvas {
+  background:
+    radial-gradient(circle at top, rgba(7, 40, 68, 0.98), rgba(0, 27, 51, 0.96) 42%, rgba(2, 6, 23, 0.94) 100%);
 }

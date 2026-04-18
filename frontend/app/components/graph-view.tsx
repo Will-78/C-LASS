@@ -101,12 +101,11 @@ export default function GraphView() {
 
   const createNewNode = () => {
     if (!menuData) return;
-    const timestamp = Date.now();
     const newNode = {
       id: `__Entity__:New Entity`,
       caption: 'New Entity',
       size: 20,
-      color: '#10b981',
+      color: '#38bdf8',
       type: 'Entity',
       desc: '',
       entryId: `__Entity__:New Entity`
@@ -141,14 +140,20 @@ export default function GraphView() {
     }
 
     setRelMenu(false);
-    const newRel = { id: `rel-${Date.now()}`, from: nodeId1, to: nodeId2, caption: normalizeRelCaption(caption) };
+    const newRel = {
+      id: `rel-${Date.now()}`,
+      from: nodeId1,
+      to: nodeId2,
+      caption: normalizeRelCaption(caption),
+      color: '#f7d774'
+    };
     setGraphData(prev => ({ ...prev, rels: [...prev.rels, newRel] }));
     setChangesMade(true);
     setNewRelationship(null);
   };
 
   return (
-    <div className="relative h-[88vh]">
+    <div className="kg-shell relative h-[88vh] overflow-hidden rounded-3xl border border-sky-200/80 bg-sky-50/70 shadow-xl shadow-sky-100">
       {selectedEntity && (
         <EntityView
           entity={selectedEntity}
@@ -205,7 +210,7 @@ export default function GraphView() {
         />
       )}
 
-      {/* Graph curation menu toggle when clicking off */}
+      {/* Graph menu toggle when clicking off */}
       {menuData && <div className="fixed inset-0 z-10" onClick={() => setMenuData(null)} />}
         {/* Graph curation menu */}
       {menuData && (
@@ -230,7 +235,7 @@ export default function GraphView() {
       }
 
       {/* Neo4j nvl wrapper */}
-      <div className="absolute inset-0 box-border">
+      <div className="kg-canvas absolute inset-0 box-border">
         <InteractiveNvlWrapper 
           nodes={graphData.nodes} 
           rels={graphData.rels}
@@ -249,41 +254,41 @@ export default function GraphView() {
       </div>
 
       {/* Teacher prompt input */}
-      <div className="absolute bottom-24 left-4 w-[320px]">
-        <div className="font-semibold text-white mb-1">Teacher Prompt</div>
+      <div className="kg-prompt-card absolute bottom-24 left-4 w-[320px] rounded-2xl border border-sky-200 bg-white/92 p-3 shadow-lg shadow-sky-100">
+        <div className="mb-1 font-semibold text-white">Teacher Prompt</div>
         <textarea
-          className="w-full p-2 rounded bg-gray-700 text-white"
+          className="min-h-28 w-full rounded-xl border border-sky-200 bg-sky-50 p-3 text-slate-800 placeholder:text-sky-900 focus:outline-none focus:ring-2 focus:ring-sky-300"
           placeholder="Enter custom instructions..."
           value={teacherPrompt}
           onChange={(e) => { setTeacherPrompt(e.target.value); setTeacherPromptChanged(true); }}
         />
         {promptSaveMessage && (
-          <div className="text-green-400 text-sm mt-1">{promptSaveMessage}</div>
+          <div className="mt-1 text-sm text-white/85">{promptSaveMessage}</div>
         )}
       </div>
 
       <button 
-        className="absolute bottom-4 left-4 rounded-lg shadow px-4 py-2 border transition-colors z-[9999] disabled:opacity-50 disabled:cursor-not-allowed"
+        className="kg-save-button absolute bottom-4 left-4 z-[9999] rounded-xl border px-4 py-2 shadow-lg transition-colors disabled:cursor-not-allowed disabled:opacity-50"
         style={{
-          backgroundColor: changesMade || teacherPromptChanged ? 'white' : '#f3f4f6',
-          color: changesMade || teacherPromptChanged ? '#0f172a' : '#9ca3af',
-          borderColor: changesMade || teacherPromptChanged ? '#e2e8f0' : '#d1d5db'
+          backgroundColor: changesMade || teacherPromptChanged ? '#b88700' : '#4a6075',
+          color: changesMade || teacherPromptChanged ? '#f7f1d6' : '#d6c78b',
+          borderColor: changesMade || teacherPromptChanged ? '#b88700' : '#5f7690'
         }}
         disabled={!(changesMade || teacherPromptChanged) || isSaving}
         onClick={() => { setSelectedEntity(null); setMenuData(null); saveChanges(); }}
       >
-        {isSaving ? 'Saving…' : 'Save Changes'}
+        {isSaving ? 'Saving...' : 'Save Changes'}
       </button>
 
       {isSaving && (
-        <div className="absolute bottom-4 left-40 rounded-lg px-3 py-2 text-sm bg-slate-900 text-white shadow z-[9999]">
-          Saving changes…
+        <div className="kg-saving-toast absolute bottom-4 left-40 z-[9999] rounded-xl border border-sky-200 bg-white/95 px-3 py-2 text-sm text-sky-800 shadow-lg shadow-sky-100">
+          Saving changes...
         </div>
       )}
 
       {/* Document upload button */}
       <button 
-        className={"absolute bottom-4 right-4 rounded-lg shadow px-4 py-2 border transition-colors z-[9999] disabled:opacity-50 disabled:cursor-not-allowed bg-white text-slate-900 border-slate-200 hover:bg-slate-100"}
+        className={"kg-upload-button absolute bottom-4 right-4 z-[9999] rounded-xl border border-sky-200 bg-white/95 px-4 py-2 text-sky-900 shadow-lg shadow-sky-100 transition-colors hover:bg-sky-50 disabled:cursor-not-allowed disabled:opacity-50"}
         disabled={documentUploadMenu}
         onClick={() => {
           setMenuData(null);

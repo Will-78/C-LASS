@@ -21,6 +21,7 @@ const Chat = () => {
   const [streamedText, setStreamedText] = useState('');
   const [chats, setChats] = useState<Chat[]>([]);
   const [currentChat, setCurrentChat] = useState<Chat>({ id: undefined, title: 'New Chat' });
+  const [chatError, setChatError] = useState('');
 
   const inputPlaceholder = "Enter message...";
 
@@ -139,13 +140,27 @@ const Chat = () => {
   }
 
   const streamResponse = async() => {
+    const trimmedMessage = userMessage.trim();
+    if (!trimmedMessage) return;
+
+    const username = localStorage.getItem("username");
+    if (!username) {
+      setChatError("Sign in to start a chat and save your messages.");
+      window.dispatchEvent(new Event("open-auth"));
+      return;
+    }
+
     try {
+      setChatError('');
       setGeneratingResponse(true);
       let chatId = currentChat?.id;
 
       // If this is a new chat, create it first
       if (!chatId) {
         chatId = await createNewChat();
+        if (!chatId) {
+          throw new Error('Unable to create a chat for this user.');
+        }
       }
 
       setFullChatLog(prevLog => [...prevLog, {role: "user", content: userMessage}]);
@@ -164,7 +179,11 @@ const Chat = () => {
         })
       });
 
-      const reader = response.body!.getReader();
+      if (!response.ok || !response.body) {
+        throw new Error('Failed to generate a response.');
+      }
+
+      const reader = response.body.getReader();
       const decoder = new TextDecoder("utf-8");
       let done = false;
       let firstChunkLoaded = false;
@@ -190,6 +209,7 @@ const Chat = () => {
       
     } catch (error) {
       console.error("Error fetching response.", error);
+      setChatError("The chat request failed. Sign in again and try once more.");
     } finally
     {      
       setGeneratingResponse(false);
@@ -198,29 +218,29 @@ const Chat = () => {
 
   return (
 
-    <div className="flex h-screen bg-[#050509] text-slate-100">
+    <div className="chat-shell flex h-[calc(100vh-7rem)] min-h-[40rem] bg-transparent text-slate-800">
       <div className="flex flex-1 justify-center">
-        <div className="flex h-full w-full flex-col border-x border-slate-800 bg-[#050509]">
+        <div className="chat-frame flex h-full w-full flex-col border-x border-sky-200/80 bg-sky-50/70 backdrop-blur-sm">
 
-          <header className="flex items-center justify-between border-b border-slate-800 px-4 py-3">
+          <header className="chat-header flex items-center justify-between border-b border-sky-200/80 bg-white/55 px-4 py-3">
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
-                <div className="h-7 w-7 rounded-full bg-emerald-500/80" />
+                <div className="h-7 w-7 rounded-full bg-sky-400 shadow-sm shadow-sky-200" />
                 <div>
                   <h1 className="text-sm font-semibold">KGTutor</h1>
-                  <p className="text-xs text-slate-400">
+                  <p className="text-xs text-white">
                     Ask anything about SE450
                   </p>
                 </div>
               </div>
               
-              {/* Chat Selection */}
+              {}
               {(
                 <select
                   value={currentChat?.id?.toString() || 'new'}
                   onChange={(e) => {
                     if (e.target.value === 'new') {
-                      // Handle new chat creation
+                      // Handle new chat
                       const newChat: Chat = { id: undefined, title: 'New Chat' };
                       setCurrentChat(newChat);
                       setFullChatLog([]);
@@ -229,7 +249,7 @@ const Chat = () => {
                       if (selected) setCurrentChat(selected);
                     }
                   }}
-                  className="rounded-lg border border-slate-700 bg-slate-800 px-3 py-1 text-xs text-slate-300 hover:bg-slate-700 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                  className="chat-select rounded-lg border border-sky-200 bg-white px-3 py-1 text-xs text-sky-900 shadow-sm transition hover:bg-sky-50 focus:outline-none focus:ring-2 focus:ring-sky-300"
                 >
                   <option value="new">+ New Chat</option>
                   {chats.map((chat, index) => (
@@ -242,35 +262,55 @@ const Chat = () => {
             </div>
           </header>
 
-          <main ref={mainRef} className={`space-y-4 overflow-y-auto px-4 py-4 mx-80 ${fullChatLog.length > 0 ? "flex-1 pb-96" : "basis-1/3"}`}>
-            {fullChatLog.map((message, idx) => (
-              <div
-                key={idx}
-                {...(message.role === "user" && { "data-user-message": true })}
-                className={
-                  message.role === "user"
-                    ? "max-h-64 w-fit max-w-md overflow-y-auto rounded-2xl bg-gray-700 p-4 text-sm leading-relaxed text-slate-100 ml-auto"
-                    : "prose max-w-none dark:prose-invert"
-                }
-              >
-                <ReactMarkdown>{message.content}</ReactMarkdown>
-              </div>
-            ))}
+          <main ref={mainRef} className="flex-1 min-h-0 overflow-y-auto px-4 py-4">
+            <div className="mx-auto flex h-full w-full max-w-5xl flex-col">
+              <div className={`space-y-4 ${fullChatLog.length > 0 || generatingResponse ? "" : "flex flex-1 items-center justify-center"}`}>
+                {fullChatLog.length === 0 && !generatingResponse ? (
+                  <div className="rounded-3xl border border-sky-200 bg-white/80 px-8 py-10 text-center shadow-lg shadow-sky-100">
+                    <h2 className="text-xl font-semibold text-sky-950">Start a new chat</h2>
+                    <p className="mt-2 text-sm text-sky-700/75">
+                      Ask a question about SE450 and lets guide you through complex topics.
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    {fullChatLog.map((message, idx) => (
+                      <div
+                        key={idx}
+                        {...(message.role === "user" && { "data-user-message": true })}
+                        className={
+                          message.role === "user"
+                            ? "chat-user-bubble ml-auto w-fit max-w-2xl rounded-2xl border border-sky-300 bg-sky-500 p-4 text-sm leading-relaxed text-white shadow-md shadow-sky-200/80"
+                            : "chat-assistant prose max-w-none rounded-3xl border border-transparent bg-transparent p-1"
+                        }
+                      >
+                        <ReactMarkdown>{message.content}</ReactMarkdown>
+                      </div>
+                    ))}
 
-            {generatingResponse &&
-              <div className="prose max-w-none dark:prose-invert">
-                <ReactMarkdown>{streamedText}</ReactMarkdown>
+                    {generatingResponse && (
+                      <div className="chat-assistant prose max-w-none rounded-3xl border border-transparent bg-transparent p-1">
+                        <ReactMarkdown>{streamedText}</ReactMarkdown>
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
-            }
+            </div>
           </main>
 
-          <footer className="mx-80 px-4 py-3">
-            <div className="rounded-2xl bg-gray-700 p-4 text-slate-100 shadow-lg">
+          <footer className="shrink-0 px-4 py-3">
+            <div className="mx-auto w-full max-w-5xl">
+            <div className="chat-composer rounded-2xl border border-sky-200 bg-white/90 p-4 text-slate-800 shadow-lg shadow-sky-100">
               <textarea
                 value={userMessage}
-                onChange={(e) => setUserMessage(e.target.value)}
+                onChange={(e) => {
+                  setUserMessage(e.target.value);
+                  if (chatError) setChatError('');
+                }}
                 placeholder={inputPlaceholder}
-                className="w-full resize-none bg-transparent text-sm text-slate-100 placeholder:text-slate-300 focus:outline-none"
+                rows={3}
+                className="max-h-40 w-full resize-y bg-transparent text-sm text-white placeholder:text-white/70 focus:outline-none"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && !e.shiftKey && !generatingResponse) {
                     e.preventDefault();
@@ -280,10 +320,10 @@ const Chat = () => {
                   }
                 }}
               />
-              <div className="mt-2 flex items-center justify-between text-[11px] text-slate-300">
+              <div className="mt-2 flex items-center justify-between text-[11px] text-white">
                 <span>Model: GPT-4o</span>
                 <button 
-                  className="inline-flex items-center gap-1 rounded-full bg-emerald-500 px-3 py-1 text-xs font-medium text-black hover:bg-emerald-400"
+                  className="chat-send inline-flex items-center gap-1 rounded-full bg-sky-500 px-3 py-1 text-xs font-medium text-white transition hover:bg-sky-400 disabled:bg-sky-200 disabled:text-white/70"
                   onClick={streamResponse}
                   disabled={!userMessage.trim() || generatingResponse}
                 >
@@ -291,10 +331,16 @@ const Chat = () => {
                   <span>↵</span>
                 </button>
               </div>
+              {chatError && (
+                <p className="mt-3 text-xs text-amber-300">
+                  {chatError}
+                </p>
+              )}
             </div>
-            <p className="mt-2 text-[11px] text-slate-500">
+            <p className="mt-2 text-[11px] text-white">
               KGTutor can make mistakes. Check with class materials
             </p>
+            </div>
           </footer>
         </div>
       </div>

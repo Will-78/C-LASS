@@ -2,60 +2,117 @@
 
 import "./globals.css";
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import UserIcon from "./components/user-icon";
-import { execSync } from "node:child_process";
-import { exportTraceState } from "next/dist/trace";
+
+const navItems = [
+  { href: "/", label: "Chat View" },
+  { href: "/kg", label: "Knowledge Graph" },
+];
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
   const [currentUser, setCurrentUser] = useState<string | null>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
+  const [theme, setTheme] = useState<"light" | "dark">("light");
 
-  // Load user from localStorage
   useEffect(() => {
     const savedUser = localStorage.getItem("username");
     const savedRole = localStorage.getItem("userRole");
+    const savedTheme = localStorage.getItem("theme");
     if (savedUser) setCurrentUser(savedUser);
     if (savedRole) setUserRole(savedRole);
-  }, []); // empty array ensures useEffect stuff only runs once
+    if (savedTheme === "dark" || savedTheme === "light") {
+      setTheme(savedTheme);
+    }
+  }, []);
+
+  useEffect(() => {
+    document.documentElement.classList.toggle("theme-dark", theme === "dark");
+    localStorage.setItem("theme", theme);
+  }, [theme]);
+
+  const visibleNavItems =
+    userRole === "Teacher"
+      ? navItems
+      : currentUser
+        ? navItems.filter((item) => item.href === "/")
+        : [];
 
   return (
     <html lang="en">
-      <body>
-        <header className="relative flex items-center p-4 bg-gray-100 border-b border-gray-300">
-          
-          {/* Centered Navigation */}
-          <nav className="absolute left-1/2 transform -translate-x-1/2 flex gap-4">
-            <Link
-              href="/"
-              className="px-4 py-2 bg-green-500 text-white rounded-lg font-semibold hover:bg-green-600 transition"
-            >
-              Chat View
-            </Link>
+      <body className={`min-h-screen bg-transparent text-slate-800 ${theme === "dark" ? "theme-dark" : ""}`}>
+        <div className="flex min-h-screen">
+          <aside className="app-sidebar flex w-72 shrink-0 flex-col border-r border-sky-200 bg-white/80 px-5 py-6 shadow-lg shadow-sky-100 backdrop-blur-sm">
+            <div>
+              <div className="mb-8">
+                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-sky-500">
+                  Navigation
+                </p>
+                <h1 className="mt-2 text-2xl font-bold text-sky-950">KGTutor</h1>
+                <p className="mt-2 text-sm text-sky-700/75">
+                  {userRole === "Teacher"
+                    ? "Instructor access includes both chat and the knowledge graph."
+                    : currentUser
+                      ? "Student access includes chat only."
+                      : "Sign in to unlock the views available to your role."}
+                </p>
+              </div>
 
-            {/* Knowledge Graph only visible to Teachers */}
-            {userRole === "Teacher" && (
-              <Link
-                href="/kg"
-                className="px-4 py-2 bg-green-500 text-white rounded-lg font-semibold hover:bg-green-600 transition"
-              >
-                Knowledge Graph
-              </Link>
-            )}
-          </nav>
+              <nav className="space-y-3">
+                {visibleNavItems.map((item) => {
+                  const isActive = pathname === item.href;
 
-          {/* User Icon / SignIn stays on right */}
-          <div className="ml-auto">
-            <UserIcon
-              currentUser={currentUser}
-              setCurrentUser={setCurrentUser}
-              userRole={userRole}
-              setUserRole={setUserRole}
-            />
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className={`nav-link block rounded-2xl border px-4 py-3 text-sm font-semibold transition ${
+                        isActive
+                          ? "nav-link-active border-sky-500 bg-sky-500 text-white shadow-md shadow-sky-200"
+                          : "border-sky-200 bg-sky-50 text-sky-900 hover:bg-white"
+                      }`}
+                    >
+                      {item.label}
+                    </Link>
+                  );
+                })}
+                {visibleNavItems.length === 0 && (
+                  <div className="rounded-2xl border border-sky-200/60 bg-sky-50/40 px-4 py-3 text-sm text-white/80">
+                    No views are available until you sign in.
+                  </div>
+                )}
+              </nav>
+
+              <div className="mt-8 rounded-2xl border border-sky-200 bg-white/70 p-3 shadow-sm shadow-sky-100">
+                <div className="mb-3 text-xs font-semibold uppercase tracking-[0.25em] text-sky-500">
+                  Theme
+                </div>
+                <button
+                  onClick={() => setTheme((current) => (current === "light" ? "dark" : "light"))}
+                  className="theme-toggle w-full rounded-xl border border-sky-300 bg-sky-50 px-4 py-3 text-sm font-semibold text-sky-900 transition hover:bg-white"
+                >
+                  {theme === "light" ? "Switch To Dark Mode" : "Switch To Light Mode"}
+                </button>
+              </div>
+            </div>
+          </aside>
+
+          <div className="min-w-0 flex-1">
+            <div className="app-topbar flex justify-end px-4 pt-4">
+              <div className="w-full max-w-xs">
+                <UserIcon
+                  currentUser={currentUser}
+                  setCurrentUser={setCurrentUser}
+                  userRole={userRole}
+                  setUserRole={setUserRole}
+                />
+              </div>
+            </div>
+            <main className="p-4 pt-3">{children}</main>
           </div>
-        </header>
-
-        <main>{children}</main>
+        </div>
       </body>
     </html>
   );
