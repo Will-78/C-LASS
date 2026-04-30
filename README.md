@@ -1,15 +1,15 @@
-![KGTutor](team_website\images\logo.png)
+![KGTutor](team_website/images/logo.png)
 # A chatbot teachers can recommend to students.
 
 ## System Overview
 ---
-![System Overview](team_website\images\architechture.png)
+![System Overview](team_website/images/architechture.png)
 
 There are two main interfaces:
 1. A knowledge graph curation interface where teachers can upload documents and edit the knowledge graph.
-![Knowledge Graph Interface](team_website\images\kg-interface.png)
+![Knowledge Graph Interface](team_website/images/kg-interface.png)
 2. A chat interface where students can interact with the LLM tutor, which directly utilizes the knowledge graph.
-![Chat Interface](team_website\images\chat-interface.png)
+![Chat Interface](team_website/images/chat-interface.png)
 
 ## Set up
 ---
